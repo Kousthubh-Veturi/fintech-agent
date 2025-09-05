@@ -1,0 +1,14 @@
+pynacl
+numpy
+tensorflow
+keras
+langgraph
+langchain
+openai
+tiktoken
+transformers
+torch
+torchvision
+datasets
+accelerate
+

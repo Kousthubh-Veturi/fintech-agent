@@ -1,0 +1,9 @@
+python/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+python/.env
+python/priv-pubkey.txt
