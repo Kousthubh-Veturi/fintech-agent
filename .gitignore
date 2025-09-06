@@ -7,3 +7,4 @@ __pycache__/
 *.pyz
 python/.env
 python/priv-pubkey.txt
+env.example
