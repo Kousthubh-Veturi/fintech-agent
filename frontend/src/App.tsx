@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
+  Grid,
   Paper,
   Typography,
   AppBar,
@@ -19,7 +20,6 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
 import {
   TrendingUp,
   TrendingDown,
@@ -184,8 +184,8 @@ function App() {
           </Alert>
         )}
 
-        <Grid container spacing={3}>
-          <Grid xs={12} md={3}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 3, mb: 3 }}>
+          <Box>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" mb={2}>
@@ -207,9 +207,9 @@ function App() {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
-          <Grid xs={12} md={3}>
+          <Box>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" mb={2}>
@@ -224,9 +224,9 @@ function App() {
                 </Typography>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
-          <Grid xs={12} md={3}>
+          <Box>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" mb={2}>
@@ -241,9 +241,9 @@ function App() {
                 </Typography>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
-          <Grid xs={12} md={3}>
+          <Box>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" mb={2}>
@@ -261,9 +261,9 @@ function App() {
                 </Button>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
-          <Grid xs={12} md={6}>
+          <Box>
             <Paper sx={{ p: 2 }}>
               <Typography variant="h6" gutterBottom>
                 Positions
@@ -298,9 +298,9 @@ function App() {
                 </Table>
               </TableContainer>
             </Paper>
-          </Grid>
+          </Box>
 
-          <Grid xs={12} md={6}>
+          <Box>
             <Paper sx={{ p: 2 }}>
               <Typography variant="h6" gutterBottom>
                 Recent Orders
@@ -347,16 +347,16 @@ function App() {
                 </Table>
               </TableContainer>
             </Paper>
-          </Grid>
+          </Box>
 
-          <Grid xs={12}>
+          <Box>
             <Paper sx={{ p: 2 }}>
               <Typography variant="h6" gutterBottom>
                 Latest News
               </Typography>
-              <Grid container spacing={2}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 2 }}>
                 {news?.items?.slice(0, 6).map((item, index) => (
-                  <Grid xs={12} md={6} key={index}>
+                  <Box key={index}>
                     <Card variant="outlined">
                       <CardContent>
                         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
@@ -377,19 +377,19 @@ function App() {
                         </Typography>
                       </CardContent>
                     </Card>
-                  </Grid>
+                  </Box>
                 ))}
-              </Grid>
+              </Box>
             </Paper>
-          </Grid>
+          </Box>
 
-          <Grid xs={12} md={6}>
+          <Box>
             <Paper sx={{ p: 2 }}>
               <Typography variant="h6" gutterBottom>
                 Quick Actions
               </Typography>
-              <Grid container spacing={2}>
-                <Grid xs={6}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                  <Box>
                   <Button
                     variant="contained"
                     color="success"
@@ -399,8 +399,8 @@ function App() {
                   >
                     Buy 0.001 BTC
                   </Button>
-                </Grid>
-                <Grid xs={6}>
+                </Box>
+                <Box>
                   <Button
                     variant="contained"
                     color="error"
@@ -410,12 +410,12 @@ function App() {
                   >
                     Sell 0.001 BTC
                   </Button>
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
             </Paper>
-          </Grid>
+          </Box>
 
-          <Grid xs={12} md={6}>
+          <Box>
             <Paper sx={{ p: 2 }}>
               <Typography variant="h6" gutterBottom>
                 System Status
@@ -439,8 +439,8 @@ function App() {
                 </Box>
               </Box>
             </Paper>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Container>
     </Box>
   );
