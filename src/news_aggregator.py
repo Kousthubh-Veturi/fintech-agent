@@ -46,9 +46,12 @@ class MarketWatchProvider:
     
     def _parse_date(self, date_str: str) -> datetime:
         try:
-            return datetime.strptime(date_str, "%a, %d %b %Y %H:%M:%S %Z")
+            from datetime import timezone
+            dt = datetime.strptime(date_str, "%a, %d %b %Y %H:%M:%S %Z")
+            return dt.replace(tzinfo=timezone.utc)
         except:
-            return datetime.utcnow()
+            from datetime import timezone
+            return datetime.now(timezone.utc)
     
     def _extract_symbols(self, text: str) -> List[str]:
         symbols = []
@@ -105,7 +108,8 @@ class NewsAPIProvider:
         try:
             return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
         except:
-            return datetime.utcnow()
+            from datetime import timezone
+            return datetime.now(timezone.utc)
     
     def _extract_symbols(self, text: str) -> List[str]:
         symbols = []
@@ -161,7 +165,8 @@ class GNewsProvider:
         try:
             return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
         except:
-            return datetime.utcnow()
+            from datetime import timezone
+            return datetime.now(timezone.utc)
     
     def _extract_symbols(self, text: str) -> List[str]:
         symbols = []
@@ -193,7 +198,10 @@ class NewsAggregator:
         return scores["compound"]
     
     def _calculate_recency_decay(self, published_at: datetime) -> float:
-        now = datetime.utcnow()
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
+        if published_at.tzinfo is None:
+            published_at = published_at.replace(tzinfo=timezone.utc)
         age_minutes = (now - published_at).total_seconds() / 60
         half_life = settings.news_recency_half_life_min
         return 2 ** (-age_minutes / half_life)

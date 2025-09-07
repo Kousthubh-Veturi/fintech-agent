@@ -116,6 +116,7 @@ async def init_database():
     database_url = settings.neon_database_url
     if database_url.startswith("postgresql://"):
         database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    database_url = database_url.replace("?sslmode=require&channel_binding=require", "")
     
     engine = create_async_engine(
         database_url,
