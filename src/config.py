@@ -5,10 +5,16 @@ from typing import Dict, List
 
 class Settings(BaseSettings):
     app_mode: str = "paper"
+    trading_mode: str = "auto"
     coindesk_api_key: str
     neon_database_url: str
     redis_url: str = "redis://localhost:6379/0"
     starting_cash_usd: float = 10000.0
+    
+    openai_api_key: str = ""
+    anthropic_api_key: str = ""
+    llm_provider: str = "openai"
+    llm_model: str = "gpt-4-turbo"
     
     news_secondary: str = "NewsAPI"
     newsapi_key: str = ""

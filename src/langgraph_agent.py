@@ -4,6 +4,7 @@ from langgraph.checkpoint.memory import MemorySaver
 import asyncio
 import json
 from datetime import datetime
+from anthropic import AsyncAnthropic
 
 from .coindesk_client import CoinDeskClient
 from .paper_broker import paper_broker
@@ -137,92 +138,218 @@ async def risk_node(state: TradingState) -> TradingState:
     return state
 
 
+async def llm_analyze_and_decide(state: TradingState) -> Dict[str, Any]:
+    """Use LLM to analyze market data and make trading decisions"""
+    
+    # Prepare context for LLM
+    context = {
+        "instrument": state["instrument"],
+        "current_price": state["market_data"].get("price", 0),
+        "indicators": state["indicators"],
+        "portfolio": state["portfolio"],
+        "research": state["research"],
+        "risk_checks": state["risk_checks"],
+        "trading_mode": settings.trading_mode
+    }
+    
+    # Create prompt for LLM
+    prompt = f"""
+You are an expert cryptocurrency trading agent analyzing {context['instrument']}.
+
+CURRENT SITUATION:
+- Price: ${context['current_price']}
+- Portfolio Cash: ${context['portfolio'].get('cash_balance', 0):,.2f}
+- Total Portfolio Value: ${context['portfolio'].get('total_value', 0):,.2f}
+- P&L: {context['portfolio'].get('pnl_pct', 0):.2f}%
+
+TECHNICAL INDICATORS:
+- RSI: {context['indicators'].get('rsi', [0])[-1] if context['indicators'].get('rsi') else 'N/A'}
+- MACD: {context['indicators'].get('macd', [0])[-1] if context['indicators'].get('macd') else 'N/A'}
+- EMA 12: {context['indicators'].get('ema_12', [0])[-1] if context['indicators'].get('ema_12') else 'N/A'}
+- EMA 26: {context['indicators'].get('ema_26', [0])[-1] if context['indicators'].get('ema_26') else 'N/A'}
+- ATR: {context['indicators'].get('atr', [0])[-1] if context['indicators'].get('atr') else 'N/A'}
+
+NEWS SENTIMENT:
+- Average Sentiment: {context['research'].get('avg_sentiment', 0):.3f}
+- News Count: {len(context['research'].get('items', []))}
+- High Impact News: {len(context['research'].get('high_impact_news', []))} items
+
+RISK CHECKS:
+{json.dumps(context['risk_checks'], indent=2)}
+
+TRADING MODE: {context['trading_mode'].upper()}
+
+Based on this analysis, provide a trading decision in this exact JSON format:
+{{
+    "action": "buy|sell|hold",
+    "quantity": <number>,
+    "confidence": <0.0-1.0>,
+    "reasoning": ["reason1", "reason2", "reason3"],
+    "risk_assessment": "low|medium|high",
+    "market_outlook": "bullish|bearish|neutral"
+}}
+
+Consider:
+1. Technical indicators and their signals
+2. News sentiment and market conditions
+3. Risk management and position sizing
+4. Current portfolio allocation
+5. Market volatility and liquidity
+
+Only recommend trades if confidence > 0.6 and risk_assessment is "low" or "medium".
+"""
+
+    try:
+        if settings.llm_provider == "openai" and settings.openai_api_key:
+            from openai import AsyncOpenAI
+            client = AsyncOpenAI(api_key=settings.openai_api_key)
+            response = await client.chat.completions.create(
+                model=settings.llm_model,
+                messages=[
+                    {"role": "system", "content": "You are a professional cryptocurrency trading agent. Always respond with valid JSON."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=500
+            )
+            llm_response = response.choices[0].message.content
+            
+        elif settings.llm_provider == "anthropic" and settings.anthropic_api_key:
+            client = AsyncAnthropic(api_key=settings.anthropic_api_key)
+            response = await client.messages.create(
+                model="claude-3-sonnet-20240229",
+                max_tokens=500,
+                temperature=0.1,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            llm_response = response.content[0].text
+        else:
+            # Fallback to rule-based system
+            return fallback_decision_logic(context)
+        
+        # Parse LLM response
+        try:
+            decision = json.loads(llm_response.strip())
+            return decision
+        except json.JSONDecodeError:
+            print(f"Failed to parse LLM response: {llm_response}")
+            return fallback_decision_logic(context)
+            
+    except Exception as e:
+        print(f"LLM decision error: {e}")
+        return fallback_decision_logic(context)
+
+
+def fallback_decision_logic(context: Dict[str, Any]) -> Dict[str, Any]:
+    """Fallback rule-based decision making when LLM is unavailable"""
+    decision = {
+        "action": "hold",
+        "quantity": 0,
+        "confidence": 0.0,
+        "reasoning": [],
+        "risk_assessment": "medium",
+        "market_outlook": "neutral"
+    }
+    
+    indicators = context["indicators"]
+    research = context["research"]
+    portfolio = context["portfolio"]
+    current_price = context["current_price"]
+    
+    if not indicators or not portfolio or current_price <= 0:
+        decision["reasoning"].append("Insufficient data for decision")
+        return decision
+    
+    signal_score = 0.0
+    reasoning = []
+    
+    # RSI analysis
+    rsi = indicators.get("rsi", [])
+    if rsi and len(rsi) > 0:
+        current_rsi = rsi[-1]
+        if current_rsi < 30:
+            signal_score += 0.3
+            reasoning.append(f"RSI oversold: {current_rsi:.2f}")
+        elif current_rsi > 70:
+            signal_score -= 0.3
+            reasoning.append(f"RSI overbought: {current_rsi:.2f}")
+    
+    # MACD analysis
+    macd = indicators.get("macd", [])
+    macd_signal = indicators.get("macd_signal", [])
+    if macd and macd_signal and len(macd) > 1 and len(macd_signal) > 1:
+        if macd[-1] > macd_signal[-1] and macd[-2] <= macd_signal[-2]:
+            signal_score += 0.2
+            reasoning.append("MACD bullish crossover")
+        elif macd[-1] < macd_signal[-1] and macd[-2] >= macd_signal[-2]:
+            signal_score -= 0.2
+            reasoning.append("MACD bearish crossover")
+    
+    # News sentiment
+    if research:
+        avg_sentiment = research.get("avg_sentiment", 0)
+        signal_score += avg_sentiment * 0.2
+        if avg_sentiment > 0.1:
+            reasoning.append(f"Positive news sentiment: {avg_sentiment:.2f}")
+        elif avg_sentiment < -0.1:
+            reasoning.append(f"Negative news sentiment: {avg_sentiment:.2f}")
+    
+    # Make decision
+    total_value = portfolio.get("total_value", 0)
+    cash_balance = portfolio.get("cash_balance", 0)
+    
+    if signal_score > 0.3 and cash_balance > current_price * 0.1:
+        decision["action"] = "buy"
+        decision["quantity"] = min(cash_balance * 0.1 / current_price, total_value * 0.05 / current_price)
+        decision["confidence"] = min(signal_score, 1.0)
+        decision["market_outlook"] = "bullish"
+    elif signal_score < -0.3:
+        current_position = 0
+        for position in portfolio.get("positions", []):
+            if position["instrument"] == context["instrument"]:
+                current_position = position["quantity"]
+                break
+        
+        if current_position > 0:
+            decision["action"] = "sell"
+            decision["quantity"] = min(current_position, current_position * 0.5)
+            decision["confidence"] = min(abs(signal_score), 1.0)
+            decision["market_outlook"] = "bearish"
+    
+    decision["reasoning"] = reasoning
+    return decision
+
+
 async def decide_node(state: TradingState) -> TradingState:
     try:
-        decision = {
-            "action": "hold",
-            "quantity": 0,
-            "confidence": 0.0,
-            "reasoning": []
-        }
-        
         if not state["risk_checks"] or not all(state["risk_checks"].values()):
-            decision["reasoning"].append("Risk checks failed")
-            state["decision"] = decision
+            state["decision"] = {
+                "action": "hold",
+                "quantity": 0,
+                "confidence": 0.0,
+                "reasoning": ["Risk checks failed"],
+                "risk_assessment": "high",
+                "market_outlook": "neutral"
+            }
             state["next_action"] = "act"
             return state
         
-        indicators = state["indicators"]
-        research = state["research"]
-        portfolio = state["portfolio"]
-        
-        if not indicators or not portfolio:
-            state["decision"] = decision
-            state["next_action"] = "act"
-            return state
-        
-        current_price = indicators.get("current_price", 0)
-        if current_price <= 0:
-            state["decision"] = decision
-            state["next_action"] = "act"
-            return state
-        
-        signal_score = 0.0
-        reasoning = []
-        
-        rsi = indicators.get("rsi", [])
-        if rsi and len(rsi) > 0:
-            current_rsi = rsi[-1]
-            if current_rsi < 30:
-                signal_score += 0.3
-                reasoning.append(f"RSI oversold: {current_rsi:.2f}")
-            elif current_rsi > 70:
-                signal_score -= 0.3
-                reasoning.append(f"RSI overbought: {current_rsi:.2f}")
-        
-        macd = indicators.get("macd", [])
-        macd_signal = indicators.get("macd_signal", [])
-        if macd and macd_signal and len(macd) > 1 and len(macd_signal) > 1:
-            if macd[-1] > macd_signal[-1] and macd[-2] <= macd_signal[-2]:
-                signal_score += 0.2
-                reasoning.append("MACD bullish crossover")
-            elif macd[-1] < macd_signal[-1] and macd[-2] >= macd_signal[-2]:
-                signal_score -= 0.2
-                reasoning.append("MACD bearish crossover")
-        
-        if research:
-            avg_sentiment = research.get("avg_sentiment", 0)
-            signal_score += avg_sentiment * 0.2
-            if avg_sentiment > 0.1:
-                reasoning.append(f"Positive news sentiment: {avg_sentiment:.2f}")
-            elif avg_sentiment < -0.1:
-                reasoning.append(f"Negative news sentiment: {avg_sentiment:.2f}")
-        
-        total_value = portfolio.get("total_value", 0)
-        cash_balance = portfolio.get("cash_balance", 0)
-        
-        if signal_score > 0.3 and cash_balance > current_price * 0.1:
-            decision["action"] = "buy"
-            decision["quantity"] = min(cash_balance * 0.1 / current_price, total_value * 0.05 / current_price)
-            decision["confidence"] = min(signal_score, 1.0)
-        elif signal_score < -0.3:
-            current_position = 0
-            for position in portfolio.get("positions", []):
-                if position["instrument"] == state["instrument"]:
-                    current_position = position["quantity"]
-                    break
-            
-            if current_position > 0:
-                decision["action"] = "sell"
-                decision["quantity"] = min(current_position, current_position * 0.5)
-                decision["confidence"] = min(abs(signal_score), 1.0)
-        
-        decision["reasoning"] = reasoning
+        # Use LLM for decision making
+        decision = await llm_analyze_and_decide(state)
         state["decision"] = decision
         
     except Exception as e:
         print(f"Decide node error: {e}")
-        state["decision"] = {"action": "hold", "quantity": 0, "confidence": 0.0, "reasoning": [f"Error: {str(e)}"]}
+        state["decision"] = {
+            "action": "hold", 
+            "quantity": 0, 
+            "confidence": 0.0, 
+            "reasoning": [f"Error: {str(e)}"],
+            "risk_assessment": "high",
+            "market_outlook": "neutral"
+        }
     
     state["next_action"] = "act"
     return state

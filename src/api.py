@@ -177,11 +177,58 @@ async def get_news(symbol: str, limit: int = 10):
 
 
 @app.post("/agent/execute/{user_id}")
-async def execute_agent_cycle(user_id: int, instrument: str = "XBX-USD"):
+async def execute_agent_cycle(user_id: int, instrument: str = "XBX-USD", mode: str = "auto"):
     try:
-        agent = TradingAgent(user_id, instrument)
+        from .langgraph_agent import LangGraphTradingAgent
+        from .config import settings
+        
+        # Update trading mode
+        settings.trading_mode = mode
+        
+        agent = LangGraphTradingAgent(user_id=user_id, instrument=instrument)
         result = await agent.execute_cycle()
-        return result
+        
+        return {
+            "success": result["success"],
+            "state": result["state"],
+            "error": result.get("error"),
+            "mode": mode
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/agent/mode/{mode}")
+async def set_trading_mode(mode: str):
+    if mode not in ["auto", "advisory"]:
+        raise HTTPException(status_code=400, detail="Mode must be 'auto' or 'advisory'")
+    
+    try:
+        from .config import settings
+        settings.trading_mode = mode
+        
+        return {
+            "success": True,
+            "mode": mode,
+            "message": f"Trading mode set to {mode}"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/agent/status")
+async def get_agent_status():
+    try:
+        from .config import settings
+        
+        return {
+            "trading_mode": settings.trading_mode,
+            "app_mode": settings.app_mode,
+            "llm_provider": settings.llm_provider,
+            "llm_model": settings.llm_model,
+            "has_openai_key": bool(settings.openai_api_key),
+            "has_anthropic_key": bool(settings.anthropic_api_key)
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -189,7 +236,8 @@ async def execute_agent_cycle(user_id: int, instrument: str = "XBX-USD"):
 @app.post("/agent/start/{user_id}")
 async def start_agent(user_id: int, instrument: str = "XBX-USD", interval_seconds: int = 300):
     try:
-        agent = TradingAgent(user_id, instrument)
+        from .langgraph_agent import LangGraphTradingAgent
+        agent = LangGraphTradingAgent(user_id, instrument)
         asyncio.create_task(agent.run_continuous(interval_seconds))
         return {"message": f"Agent started for user {user_id} with {interval_seconds}s interval"}
     except Exception as e:

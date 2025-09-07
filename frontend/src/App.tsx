@@ -95,6 +95,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [agentRunning, setAgentRunning] = useState(false);
+  const [tradingMode, setTradingMode] = useState<'advisory' | 'auto'>('auto');
 
   const userId = 1;
   const instrument = 'XBX-USD';
@@ -168,12 +169,45 @@ function App() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             FinTech Trading Agent
           </Typography>
-          <Chip
-            label={agentRunning ? 'Agent Running' : 'Agent Ready'}
-            color={agentRunning ? 'warning' : 'success'}
-            variant="outlined"
-            sx={{ color: 'white', borderColor: 'white' }}
-          />
+          
+          <Box display="flex" alignItems="center" gap={2}>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography variant="body2" sx={{ color: 'white' }}>Mode:</Typography>
+              <Button
+                variant={tradingMode === 'advisory' ? 'contained' : 'outlined'}
+                size="small"
+                color={tradingMode === 'advisory' ? 'warning' : 'inherit'}
+                onClick={() => setTradingMode('advisory')}
+                sx={{ 
+                  color: tradingMode === 'advisory' ? 'white' : 'white',
+                  borderColor: 'white',
+                  '&:hover': { borderColor: 'white' }
+                }}
+              >
+                Advisory
+              </Button>
+              <Button
+                variant={tradingMode === 'auto' ? 'contained' : 'outlined'}
+                size="small"
+                color={tradingMode === 'auto' ? 'success' : 'inherit'}
+                onClick={() => setTradingMode('auto')}
+                sx={{ 
+                  color: tradingMode === 'auto' ? 'white' : 'white',
+                  borderColor: 'white',
+                  '&:hover': { borderColor: 'white' }
+                }}
+              >
+                Auto
+              </Button>
+            </Box>
+            
+            <Chip
+              label={agentRunning ? 'Agent Running' : 'Agent Ready'}
+              color={agentRunning ? 'warning' : 'success'}
+              variant="outlined"
+              sx={{ color: 'white', borderColor: 'white' }}
+            />
+          </Box>
         </Toolbar>
       </AppBar>
 
@@ -250,15 +284,25 @@ function App() {
                   <Zap style={{ marginRight: 8, color: '#9c27b0' }} />
                   <Typography variant="h6">Agent Control</Typography>
                 </Box>
-                <Button
-                  variant="contained"
-                  fullWidth
-                  onClick={executeAgentCycle}
-                  disabled={agentRunning}
-                  startIcon={agentRunning ? <CircularProgress size={20} /> : <Zap size={20} />}
-                >
-                  {agentRunning ? 'Running...' : 'Execute Cycle'}
-                </Button>
+                <Box display="flex" gap={1}>
+                  <Button
+                    variant="contained"
+                    color={tradingMode === 'auto' ? 'primary' : 'warning'}
+                    onClick={executeAgentCycle}
+                    disabled={agentRunning}
+                    startIcon={agentRunning ? <CircularProgress size={20} /> : <Zap size={20} />}
+                    sx={{ flex: 1 }}
+                  >
+                    {agentRunning ? 'Running...' : tradingMode === 'auto' ? 'Execute Cycle' : 'Get Advice'}
+                  </Button>
+                  <Button 
+                    variant="outlined" 
+                    onClick={() => setAgentRunning(!agentRunning)}
+                    color={agentRunning ? 'error' : 'success'}
+                  >
+                    {agentRunning ? 'Stop' : 'Start'}
+                  </Button>
+                </Box>
               </CardContent>
             </Card>
           </Box>
