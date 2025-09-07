@@ -2,7 +2,7 @@ import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column, BigInteger, String, Numeric, DateTime, Text, Boolean, ForeignKey, CheckConstraint
-from sqlalchemy.dialects.postgresql import TIMESTAMPTZ
+from sqlalchemy import DateTime
 from datetime import datetime
 from typing import Optional
 from .config import settings
@@ -17,7 +17,7 @@ class PaperAccount(Base):
     base_ccy = Column(String(10), nullable=False, default="USD")
     starting_cash = Column(Numeric(18, 2), nullable=False)
     cash_balance = Column(Numeric(18, 2), nullable=False)
-    created_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class PaperPosition(Base):
     __tablename__ = "paper_position"
@@ -27,7 +27,7 @@ class PaperPosition(Base):
     instrument = Column(String(50), nullable=False)
     qty = Column(Numeric(38, 18), nullable=False, default=0)
     avg_price = Column(Numeric(18, 8), nullable=False, default=0)
-    updated_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)
     
     __table_args__ = (
         CheckConstraint("qty >= 0", name="check_qty_positive"),
@@ -46,7 +46,7 @@ class PaperOrder(Base):
     limit_price = Column(Numeric(18, 8))
     status = Column(String(20), nullable=False, default="created")
     idempotency_key = Column(String(255), unique=True, nullable=False)
-    created_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
     
     __table_args__ = (
         CheckConstraint("side IN ('buy', 'sell')", name="check_side"),
@@ -62,7 +62,7 @@ class PaperFill(Base):
     price = Column(Numeric(18, 8), nullable=False)
     qty = Column(Numeric(38, 18), nullable=False)
     fee = Column(Numeric(18, 8), nullable=False, default=0)
-    filled_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    filled_at = Column(DateTime, default=datetime.utcnow)
 
 class Signal(Base):
     __tablename__ = "signal"
@@ -75,7 +75,7 @@ class Signal(Base):
     price = Column(Numeric(18, 8), nullable=False)
     indicators = Column(Text)
     news_summary = Column(Text)
-    created_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class DecisionLog(Base):
     __tablename__ = "decision_log"
@@ -90,7 +90,7 @@ class DecisionLog(Base):
     indicators = Column(Text)
     news_items = Column(Text)
     risk_checks = Column(Text)
-    created_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class NewsItem(Base):
     __tablename__ = "news_item"
@@ -100,12 +100,12 @@ class NewsItem(Base):
     symbol = Column(String(20), nullable=False)
     title = Column(Text, nullable=False)
     url = Column(Text, nullable=False)
-    published_at = Column(TIMESTAMPTZ, nullable=False)
+    published_at = Column(DateTime, nullable=False)
     content = Column(Text)
     summary = Column(Text)
     sentiment = Column(Numeric(3, 2))
     credibility_score = Column(Numeric(3, 2))
-    created_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 engine = None
 SessionLocal = None
