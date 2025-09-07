@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
-  Grid,
   Paper,
   Typography,
   AppBar,
@@ -20,6 +19,7 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import {
   TrendingUp,
   TrendingDown,
@@ -185,7 +185,7 @@ function App() {
         )}
 
         <Grid container spacing={3}>
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" mb={2}>
@@ -209,7 +209,7 @@ function App() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" mb={2}>
@@ -226,7 +226,7 @@ function App() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" mb={2}>
@@ -243,7 +243,7 @@ function App() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" mb={2}>
@@ -263,7 +263,7 @@ function App() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid xs={12} md={6}>
             <Paper sx={{ p: 2 }}>
               <Typography variant="h6" gutterBottom>
                 Positions
@@ -300,7 +300,7 @@ function App() {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid xs={12} md={6}>
             <Paper sx={{ p: 2 }}>
               <Typography variant="h6" gutterBottom>
                 Recent Orders
@@ -349,14 +349,14 @@ function App() {
             </Paper>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid xs={12}>
             <Paper sx={{ p: 2 }}>
               <Typography variant="h6" gutterBottom>
                 Latest News
               </Typography>
               <Grid container spacing={2}>
                 {news?.items?.slice(0, 6).map((item, index) => (
-                  <Grid item xs={12} md={6} key={index}>
+                  <Grid xs={12} md={6} key={index}>
                     <Card variant="outlined">
                       <CardContent>
                         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
@@ -383,13 +383,13 @@ function App() {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid xs={12} md={6}>
             <Paper sx={{ p: 2 }}>
               <Typography variant="h6" gutterBottom>
                 Quick Actions
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={6}>
+                <Grid xs={6}>
                   <Button
                     variant="contained"
                     color="success"
@@ -400,7 +400,7 @@ function App() {
                     Buy 0.001 BTC
                   </Button>
                 </Grid>
-                <Grid item xs={6}>
+                <Grid xs={6}>
                   <Button
                     variant="contained"
                     color="error"
@@ -415,7 +415,7 @@ function App() {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid xs={12} md={6}>
             <Paper sx={{ p: 2 }}>
               <Typography variant="h6" gutterBottom>
                 System Status
