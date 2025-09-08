@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
-  Grid,
   Paper,
   Typography,
   AppBar,
@@ -19,472 +18,502 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Grid,
 } from '@mui/material';
-import {
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Activity,
-  BarChart3,
-  Zap,
-  AlertTriangle,
-  CheckCircle,
-} from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import axios from 'axios';
 
 const API_BASE = 'http://localhost:8000';
 
-interface Portfolio {
-  user_id: number;
-  cash_balance: number;
-  total_value: number;
-  positions: Position[];
+interface CryptoPrice {
+  symbol: string;
+  name: string;
+  price: number;
+  change_24h: number;
+  market_cap: number;
+  volume_24h: number;
+  source: string;
+}
+
+interface Position {
+  symbol: string;
+  quantity: number;
+  avg_price: number;
+  current_price: number;
+  market_value: number;
   pnl: number;
   pnl_pct: number;
 }
 
-interface Position {
-  instrument: string;
-  quantity: number;
-  avg_price: number;
-  market_value: number;
-  updated_at: string;
-}
-
-interface Order {
-  order_id: number;
-  instrument: string;
-  side: string;
-  order_type: string;
-  quantity: number;
-  status: string;
-  created_at: string;
-}
-
-interface MarketData {
-  instrument: string;
-  price: number;
-  ohlc_1h: any;
-  ohlc_1d: any;
-  timestamp: number;
+interface Portfolio {
+  cash: number;
+  total_value: number;
+  total_pnl: number;
+  total_pnl_pct: number;
+  position_count: number;
+  largest_position: string;
+  diversification_score: number;
+  positions: Position[];
 }
 
 interface NewsItem {
   title: string;
+  description: string;
   url: string;
-  sentiment: number;
-  weight: number;
-  source: string;
   published_at: string;
+  source: string;
+  sentiment: string;
+  relevant_cryptos: string[];
 }
 
-interface News {
-  items: NewsItem[];
-  avg_sentiment: number;
-  negative_news_count: number;
-  positive_news_count: number;
-  high_impact_news: NewsItem[];
+interface RebalanceSuggestion {
+  action: string;
+  symbol: string;
+  quantity: number;
+  value: number;
+  reason: string;
 }
 
 function App() {
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [marketData, setMarketData] = useState<MarketData | null>(null);
-  const [news, setNews] = useState<News | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [cryptoPrices, setCryptoPrices] = useState<Record<string, CryptoPrice>>({});
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [rebalanceSuggestions, setRebalanceSuggestions] = useState<RebalanceSuggestion[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [agentRunning, setAgentRunning] = useState(false);
-  const [tradingMode, setTradingMode] = useState<'advisory' | 'auto'>('auto');
-
-  const userId = 1;
-  const instrument = 'XBX-USD';
-
-  useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  const [tradeQuantity, setTradeQuantity] = useState('0.01');
+  const [tradeSide, setTradeSide] = useState<'buy' | 'sell'>('buy');
+  const [selectedCrypto, setSelectedCrypto] = useState('BTC');
+  
+  const supportedCryptos = ['BTC', 'ETH', 'SOL', 'ADA', 'DOT', 'LINK', 'MATIC', 'AVAX'];
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       setError(null);
-      const [portfolioRes, ordersRes, marketRes, newsRes] = await Promise.all([
-        axios.get(`${API_BASE}/portfolio/${userId}`),
-        axios.get(`${API_BASE}/orders/${userId}`),
-        axios.get(`${API_BASE}/market/${instrument}`),
-        axios.get(`${API_BASE}/news/BTC`),
+
+      // Fetch all data in parallel
+      const [portfolioRes, pricesRes, newsRes, rebalanceRes] = await Promise.all([
+        axios.get(`${API_BASE}/portfolio`),
+        axios.get(`${API_BASE}/crypto/prices`),
+        axios.get(`${API_BASE}/crypto/news?limit=8`),
+        axios.get(`${API_BASE}/portfolio/rebalance`)
       ]);
 
       setPortfolio(portfolioRes.data);
-      setOrders(ordersRes.data.orders || []);
-      setMarketData(marketRes.data);
-      setNews(newsRes.data);
+      setCryptoPrices(pricesRes.data.prices || {});
+      setNews(newsRes.data.news || []);
+      setRebalanceSuggestions(rebalanceRes.data.suggestions || []);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to fetch data');
+      setError(err.message || 'Failed to fetch data');
     } finally {
       setLoading(false);
     }
   };
 
-  const executeAgentCycle = async () => {
+  const executeTrade = async () => {
     try {
-      setAgentRunning(true);
-      await axios.post(`${API_BASE}/agent/execute/${userId}?instrument=${instrument}`);
-      await fetchData();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to execute agent cycle');
-    } finally {
-      setAgentRunning(false);
-    }
-  };
-
-  const createOrder = async (side: string, quantity: number) => {
-    try {
-      await axios.post(`${API_BASE}/orders/${userId}`, {
-        instrument,
-        side,
-        order_type: 'market',
-        quantity,
+      setLoading(true);
+      const response = await axios.post(`${API_BASE}/trade`, null, {
+        params: {
+          symbol: selectedCrypto,
+          side: tradeSide,
+          quantity: parseFloat(tradeQuantity)
+        }
       });
-      await fetchData();
+      
+      if (response.data.success) {
+        alert(`Trade executed: ${response.data.message}`);
+        fetchData(); // Refresh data
+      } else {
+        alert(`Trade failed: ${response.data.message}`);
+      }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create order');
+      setError(err.message || 'Failed to execute trade');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <CircularProgress size={60} />
-      </Box>
-    );
-  }
+  const executeRebalanceTrade = async (suggestion: RebalanceSuggestion) => {
+    try {
+      setLoading(true);
+      const response = await axios.post(`${API_BASE}/trade`, null, {
+        params: {
+          symbol: suggestion.symbol,
+          side: suggestion.action,
+          quantity: suggestion.quantity
+        }
+      });
+      
+      if (response.data.success) {
+        alert(`Rebalance trade executed: ${response.data.message}`);
+        fetchData();
+      } else {
+        alert(`Rebalance trade failed: ${response.data.message}`);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to execute rebalance trade');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPortfolio = async () => {
+    try {
+      setLoading(true);
+      await axios.post(`${API_BASE}/reset`);
+      alert('Portfolio reset to $10,000');
+      fetchData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to reset portfolio');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const getSentimentColor = (sentiment: string) => {
+    switch (sentiment) {
+      case 'positive': return 'success';
+      case 'negative': return 'error';
+      default: return 'default';
+    }
+  };
+
+  const getChangeColor = (change: number) => {
+    return change >= 0 ? 'success.main' : 'error.main';
+  };
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', minHeight: '100vh' }}>
       <AppBar position="static" sx={{ bgcolor: '#1976d2' }}>
         <Toolbar>
-          <Activity style={{ marginRight: 16 }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            FinTech Trading Agent
+            🚀 Enhanced Multi-Crypto Advisory System v2.0
           </Typography>
-          
-          <Box display="flex" alignItems="center" gap={2}>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Typography variant="body2" sx={{ color: 'white' }}>Mode:</Typography>
-              <Button
-                variant={tradingMode === 'advisory' ? 'contained' : 'outlined'}
-                size="small"
-                color={tradingMode === 'advisory' ? 'warning' : 'inherit'}
-                onClick={() => setTradingMode('advisory')}
-                sx={{ 
-                  color: tradingMode === 'advisory' ? 'white' : 'white',
-                  borderColor: 'white',
-                  '&:hover': { borderColor: 'white' }
-                }}
-              >
-                Advisory
-              </Button>
-              <Button
-                variant={tradingMode === 'auto' ? 'contained' : 'outlined'}
-                size="small"
-                color={tradingMode === 'auto' ? 'success' : 'inherit'}
-                onClick={() => setTradingMode('auto')}
-                sx={{ 
-                  color: tradingMode === 'auto' ? 'white' : 'white',
-                  borderColor: 'white',
-                  '&:hover': { borderColor: 'white' }
-                }}
-              >
-                Auto
-              </Button>
-            </Box>
-            
-            <Chip
-              label={agentRunning ? 'Agent Running' : 'Agent Ready'}
-              color={agentRunning ? 'warning' : 'success'}
-              variant="outlined"
-              sx={{ color: 'white', borderColor: 'white' }}
-            />
-          </Box>
+          <Chip label="MULTI-CRYPTO MODE" color="warning" />
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      <Container maxWidth="xl" sx={{ mt: 4, pb: 4 }}>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
             {error}
           </Alert>
         )}
 
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 3, mb: 3 }}>
-          <Box>
-            <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center" mb={2}>
-                  <DollarSign style={{ marginRight: 8, color: '#4caf50' }} />
-                  <Typography variant="h6">Portfolio</Typography>
-                </Box>
+        {/* Crypto Prices Grid */}
+        <Paper sx={{ p: 2, mb: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            💰 Live Cryptocurrency Prices
+          </Typography>
+          <Grid container spacing={2}>
+            {Object.entries(cryptoPrices).map(([symbol, data]) => (
+              <Grid item xs={12} sm={6} md={3} key={symbol}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6" color="primary">
+                      {symbol}
+                    </Typography>
+                    <Typography variant="h5">
+                      ${data.price.toLocaleString()}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ color: getChangeColor(data.change_24h) }}
+                    >
+                      {data.change_24h >= 0 ? '+' : ''}{data.change_24h.toFixed(2)}%
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {data.name}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Paper>
+
+        {/* Portfolio Overview */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 3, mb: 4 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                💼 Portfolio Value
+              </Typography>
+              {portfolio ? (
+                <>
+                  <Typography variant="h4" color="primary">
+                    ${portfolio.total_value.toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" color={portfolio.total_pnl >= 0 ? 'success.main' : 'error.main'}>
+                    P&L: ${portfolio.total_pnl.toFixed(2)} ({portfolio.total_pnl_pct.toFixed(2)}%)
+                  </Typography>
+                </>
+              ) : (
+                <CircularProgress size={24} />
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                💵 Available Cash
+              </Typography>
+              {portfolio ? (
                 <Typography variant="h4" color="primary">
-                  ${portfolio?.total_value?.toFixed(2) || '0.00'}
+                  ${portfolio.cash.toLocaleString()}
                 </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Cash: ${portfolio?.cash_balance?.toFixed(2) || '0.00'}
-                </Typography>
-                <Box mt={2}>
-                  <Chip
-                    label={`${portfolio?.pnl_pct?.toFixed(2) || '0.00'}%`}
-                    color={portfolio && portfolio.pnl_pct >= 0 ? 'success' : 'error'}
-                    icon={portfolio && portfolio.pnl_pct >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                  />
-                </Box>
-              </CardContent>
-            </Card>
-          </Box>
+              ) : (
+                <CircularProgress size={24} />
+              )}
+            </CardContent>
+          </Card>
 
-          <Box>
-            <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center" mb={2}>
-                  <BarChart3 style={{ marginRight: 8, color: '#ff9800' }} />
-                  <Typography variant="h6">Market Price</Typography>
-                </Box>
-                <Typography variant="h4" color="primary">
-                  ${marketData?.price?.toFixed(2) || '0.00'}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  {instrument}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Box>
-
-          <Box>
-            <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center" mb={2}>
-                  <AlertTriangle style={{ marginRight: 8, color: '#f44336' }} />
-                  <Typography variant="h6">News Sentiment</Typography>
-                </Box>
-                <Typography variant="h4" color={news && news.avg_sentiment >= 0 ? 'success.main' : 'error.main'}>
-                  {news?.avg_sentiment?.toFixed(3) || '0.000'}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  {news?.items?.length || 0} articles
-                </Typography>
-              </CardContent>
-            </Card>
-          </Box>
-
-          <Box>
-            <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center" mb={2}>
-                  <Zap style={{ marginRight: 8, color: '#9c27b0' }} />
-                  <Typography variant="h6">Agent Control</Typography>
-                </Box>
-                <Box display="flex" gap={1}>
-                  <Button
-                    variant="contained"
-                    color={tradingMode === 'auto' ? 'primary' : 'warning'}
-                    onClick={executeAgentCycle}
-                    disabled={agentRunning}
-                    startIcon={agentRunning ? <CircularProgress size={20} /> : <Zap size={20} />}
-                    sx={{ flex: 1 }}
-                  >
-                    {agentRunning ? 'Running...' : tradingMode === 'auto' ? 'Execute Cycle' : 'Get Advice'}
-                  </Button>
-                  <Button 
-                    variant="outlined" 
-                    onClick={() => setAgentRunning(!agentRunning)}
-                    color={agentRunning ? 'error' : 'success'}
-                  >
-                    {agentRunning ? 'Stop' : 'Start'}
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          </Box>
-
-          <Box>
-            <Paper sx={{ p: 2 }}>
+          <Card>
+            <CardContent>
               <Typography variant="h6" gutterBottom>
-                Positions
+                📊 Diversification
               </Typography>
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Instrument</TableCell>
-                      <TableCell align="right">Quantity</TableCell>
-                      <TableCell align="right">Avg Price</TableCell>
-                      <TableCell align="right">Market Value</TableCell>
+              {portfolio ? (
+                <>
+                  <Typography variant="h4" color="primary">
+                    {portfolio.diversification_score.toFixed(1)}/100
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {portfolio.position_count} positions
+                  </Typography>
+                </>
+              ) : (
+                <CircularProgress size={24} />
+              )}
+            </CardContent>
+          </Card>
+        </Box>
+
+        {/* Current Positions */}
+        {portfolio && portfolio.positions.length > 0 && (
+          <Paper sx={{ p: 2, mb: 4 }}>
+            <Typography variant="h6" gutterBottom>
+              📈 Current Positions
+            </Typography>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Symbol</TableCell>
+                    <TableCell align="right">Quantity</TableCell>
+                    <TableCell align="right">Avg Price</TableCell>
+                    <TableCell align="right">Current Price</TableCell>
+                    <TableCell align="right">Market Value</TableCell>
+                    <TableCell align="right">P&L</TableCell>
+                    <TableCell align="right">P&L %</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {portfolio.positions.map((position, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <Chip label={position.symbol} variant="outlined" />
+                      </TableCell>
+                      <TableCell align="right">{position.quantity.toFixed(6)}</TableCell>
+                      <TableCell align="right">${position.avg_price.toLocaleString()}</TableCell>
+                      <TableCell align="right">${position.current_price.toLocaleString()}</TableCell>
+                      <TableCell align="right">${position.market_value.toLocaleString()}</TableCell>
+                      <TableCell 
+                        align="right" 
+                        sx={{ color: position.pnl >= 0 ? 'success.main' : 'error.main' }}
+                      >
+                        ${position.pnl.toFixed(2)}
+                      </TableCell>
+                      <TableCell 
+                        align="right"
+                        sx={{ color: position.pnl_pct >= 0 ? 'success.main' : 'error.main' }}
+                      >
+                        {position.pnl_pct.toFixed(2)}%
+                      </TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {portfolio?.positions?.map((position, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{position.instrument}</TableCell>
-                        <TableCell align="right">{position.quantity.toFixed(6)}</TableCell>
-                        <TableCell align="right">${position.avg_price.toFixed(2)}</TableCell>
-                        <TableCell align="right">${position.market_value.toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))}
-                    {(!portfolio?.positions || portfolio.positions.length === 0) && (
-                      <TableRow>
-                        <TableCell colSpan={4} align="center">
-                          No positions
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
-          </Box>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        )}
 
-          <Box>
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Recent Orders
-              </Typography>
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Side</TableCell>
-                      <TableCell>Quantity</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Time</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {orders.slice(0, 5).map((order) => (
-                      <TableRow key={order.order_id}>
-                        <TableCell>
-                          <Chip
-                            label={order.side.toUpperCase()}
-                            color={order.side === 'buy' ? 'success' : 'error'}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>{order.quantity?.toFixed(6) || 'N/A'}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={order.status}
-                            color={order.status === 'filled' ? 'success' : 'default'}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>{new Date(order.created_at).toLocaleTimeString()}</TableCell>
-                      </TableRow>
-                    ))}
-                    {orders.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={4} align="center">
-                          No orders
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
-          </Box>
+        {/* Trading and Rebalancing */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 3, mb: 4 }}>
+          {/* Manual Trading */}
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              ⚡ Manual Trading
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <FormControl size="small">
+                <InputLabel>Cryptocurrency</InputLabel>
+                <Select
+                  value={selectedCrypto}
+                  onChange={(e) => setSelectedCrypto(e.target.value)}
+                  label="Cryptocurrency"
+                >
+                  {supportedCryptos.map(crypto => (
+                    <MenuItem key={crypto} value={crypto}>{crypto}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                label="Quantity"
+                value={tradeQuantity}
+                onChange={(e) => setTradeQuantity(e.target.value)}
+                type="number"
+                size="small"
+              />
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  variant={tradeSide === 'buy' ? 'contained' : 'outlined'}
+                  color="success"
+                  onClick={() => setTradeSide('buy')}
+                  size="small"
+                >
+                  BUY
+                </Button>
+                <Button
+                  variant={tradeSide === 'sell' ? 'contained' : 'outlined'}
+                  color="error"
+                  onClick={() => setTradeSide('sell')}
+                  size="small"
+                >
+                  SELL
+                </Button>
+              </Box>
+              <Button
+                variant="contained"
+                onClick={executeTrade}
+                disabled={loading}
+                fullWidth
+              >
+                Execute Trade
+              </Button>
+            </Box>
+          </Paper>
 
-          <Box>
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Latest News
-              </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 2 }}>
-                {news?.items?.slice(0, 6).map((item, index) => (
-                  <Box key={index}>
-                    <Card variant="outlined">
-                      <CardContent>
-                        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                          <Typography variant="body2" color="textSecondary">
-                            {item.source}
-                          </Typography>
-                          <Chip
-                            label={item.sentiment >= 0 ? 'Positive' : 'Negative'}
-                            color={item.sentiment >= 0 ? 'success' : 'error'}
-                            size="small"
-                          />
-                        </Box>
-                        <Typography variant="body1" gutterBottom>
-                          {item.title.length > 100 ? `${item.title.substring(0, 100)}...` : item.title}
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary">
-                          {new Date(item.published_at).toLocaleString()}
-                        </Typography>
-                      </CardContent>
-                    </Card>
+          {/* Rebalancing Suggestions */}
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              🔄 Rebalancing Suggestions
+            </Typography>
+            {rebalanceSuggestions.length > 0 ? (
+              <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
+                {rebalanceSuggestions.slice(0, 5).map((suggestion, index) => (
+                  <Box key={index} sx={{ mb: 2, p: 1, border: '1px solid #ddd', borderRadius: 1 }}>
+                    <Typography variant="body2" sx={{ mb: 1 }}>
+                      <Chip 
+                        label={suggestion.action.toUpperCase()} 
+                        color={suggestion.action === 'buy' ? 'success' : 'error'}
+                        size="small"
+                      /> {suggestion.quantity.toFixed(4)} {suggestion.symbol}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                      {suggestion.reason}
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => executeRebalanceTrade(suggestion)}
+                      disabled={loading}
+                    >
+                      Execute
+                    </Button>
                   </Box>
                 ))}
               </Box>
-            </Paper>
-          </Box>
-
-          <Box>
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Quick Actions
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Portfolio is well balanced
               </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-                  <Box>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    fullWidth
-                    onClick={() => createOrder('buy', 0.001)}
-                    startIcon={<TrendingUp size={20} />}
-                  >
-                    Buy 0.001 BTC
-                  </Button>
-                </Box>
-                <Box>
-                  <Button
-                    variant="contained"
-                    color="error"
-                    fullWidth
-                    onClick={() => createOrder('sell', 0.001)}
-                    startIcon={<TrendingDown size={20} />}
-                  >
-                    Sell 0.001 BTC
-                  </Button>
-                </Box>
-              </Box>
-            </Paper>
-          </Box>
-
-          <Box>
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                System Status
-              </Typography>
-              <Box>
-                <Box display="flex" alignItems="center" mb={1}>
-                  <CheckCircle style={{ marginRight: 8, color: '#4caf50' }} size={20} />
-                  <Typography variant="body2">Redis Connected</Typography>
-                </Box>
-                <Box display="flex" alignItems="center" mb={1}>
-                  <CheckCircle style={{ marginRight: 8, color: '#4caf50' }} size={20} />
-                  <Typography variant="body2">Database Connected</Typography>
-                </Box>
-                <Box display="flex" alignItems="center" mb={1}>
-                  <CheckCircle style={{ marginRight: 8, color: '#4caf50' }} size={20} />
-                  <Typography variant="body2">Paper Trading Active</Typography>
-                </Box>
-                <Box display="flex" alignItems="center">
-                  <AlertTriangle style={{ marginRight: 8, color: '#ff9800' }} size={20} />
-                  <Typography variant="body2">CoinDesk API Limited</Typography>
-                </Box>
-              </Box>
-            </Paper>
-          </Box>
+            )}
+          </Paper>
         </Box>
+
+        {/* System Controls */}
+        <Paper sx={{ p: 2, mb: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            🔧 System Controls
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <Button
+              variant="outlined"
+              onClick={fetchData}
+              disabled={loading}
+            >
+              Refresh Data
+            </Button>
+            <Button
+              variant="outlined"
+              color="warning"
+              onClick={resetPortfolio}
+              disabled={loading}
+            >
+              Reset Portfolio
+            </Button>
+          </Box>
+        </Paper>
+
+        {/* Multi-Crypto News */}
+        {news.length > 0 && (
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              📰 Multi-Crypto News Feed
+            </Typography>
+            <Grid container spacing={2}>
+              {news.map((article, index) => (
+                <Grid item xs={12} md={6} key={index}>
+                  <Card variant="outlined">
+                    <CardContent>
+                      <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', flex: 1 }}>
+                          {article.title}
+                        </Typography>
+                        <Chip 
+                          label={article.sentiment} 
+                          size="small" 
+                          color={getSentimentColor(article.sentiment) as any}
+                        />
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        {article.description}
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
+                        {article.relevant_cryptos.map((crypto, i) => (
+                          <Chip key={i} label={crypto} size="small" variant="outlined" />
+                        ))}
+                      </Box>
+                      <Typography variant="caption" color="text.secondary">
+                        {article.source} • {new Date(article.published_at).toLocaleDateString()}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+        )}
+
+        {loading && (
+          <Box display="flex" justifyContent="center" mt={2}>
+            <CircularProgress />
+          </Box>
+        )}
       </Container>
     </Box>
   );
