@@ -23,7 +23,28 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  Avatar,
 } from '@mui/material';
+import {
+  Menu as MenuIcon,
+  Dashboard,
+  TrendingUp,
+  AccountBalance,
+  Assessment,
+  Settings,
+  Refresh,
+  Add,
+  Remove,
+  ArrowUpward,
+  ArrowDownward,
+} from '@mui/icons-material';
 import axios from 'axios';
 
 const API_BASE = 'http://localhost:8000';
@@ -78,6 +99,8 @@ interface RebalanceSuggestion {
 }
 
 function App() {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [currentView, setCurrentView] = useState('dashboard');
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [cryptoPrices, setCryptoPrices] = useState<Record<string, CryptoPrice>>({});
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -95,7 +118,6 @@ function App() {
       setLoading(true);
       setError(null);
 
-      // Fetch all data in parallel
       const [portfolioRes, pricesRes, newsRes, rebalanceRes] = await Promise.all([
         axios.get(`${API_BASE}/portfolio`),
         axios.get(`${API_BASE}/crypto/prices`),
@@ -126,10 +148,9 @@ function App() {
       });
       
       if (response.data.success) {
-        alert(`Trade executed: ${response.data.message}`);
-        fetchData(); // Refresh data
+        fetchData();
       } else {
-        alert(`Trade failed: ${response.data.message}`);
+        setError(response.data.message);
       }
     } catch (err: any) {
       setError(err.message || 'Failed to execute trade');
@@ -150,10 +171,9 @@ function App() {
       });
       
       if (response.data.success) {
-        alert(`Rebalance trade executed: ${response.data.message}`);
         fetchData();
       } else {
-        alert(`Rebalance trade failed: ${response.data.message}`);
+        setError(response.data.message);
       }
     } catch (err: any) {
       setError(err.message || 'Failed to execute rebalance trade');
@@ -166,7 +186,6 @@ function App() {
     try {
       setLoading(true);
       await axios.post(`${API_BASE}/reset`);
-      alert('Portfolio reset to $10,000');
       fetchData();
     } catch (err: any) {
       setError(err.message || 'Failed to reset portfolio');
@@ -177,190 +196,215 @@ function App() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 30000); // Refresh every 30 seconds
+    const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
 
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
-      case 'positive': return 'success';
-      case 'negative': return 'error';
-      default: return 'default';
+      case 'positive': return '#4caf50';
+      case 'negative': return '#f44336';
+      default: return '#9e9e9e';
     }
   };
 
   const getChangeColor = (change: number) => {
-    return change >= 0 ? 'success.main' : 'error.main';
+    return change >= 0 ? '#4caf50' : '#f44336';
   };
 
-  return (
-    <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', minHeight: '100vh' }}>
-      <AppBar position="static" sx={{ bgcolor: '#1976d2' }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            🚀 Enhanced Multi-Crypto Advisory System v2.0
-          </Typography>
-          <Chip label="MULTI-CRYPTO MODE" color="warning" />
-        </Toolbar>
-      </AppBar>
+  const menuItems = [
+    { text: 'Dashboard', icon: <Dashboard />, view: 'dashboard' },
+    { text: 'Trading', icon: <TrendingUp />, view: 'trading' },
+    { text: 'Portfolio', icon: <AccountBalance />, view: 'portfolio' },
+    { text: 'Analytics', icon: <Assessment />, view: 'analytics' },
+    { text: 'Settings', icon: <Settings />, view: 'settings' },
+  ];
 
-      <Container maxWidth="xl" sx={{ mt: 4, pb: 4 }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
+  const renderDashboard = () => (
+    <Box sx={{ p: 3 }}>
+      {/* Key Metrics Cards */}
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+        gap: 3, 
+        mb: 4 
+      }}>
+        <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
+              Total Portfolio Value
+            </Typography>
+            <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
+              {portfolio ? `$${portfolio.total_value.toLocaleString()}` : '$0'}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {portfolio && portfolio.total_pnl >= 0 ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />}
+              <Typography variant="body2">
+                {portfolio ? `${portfolio.total_pnl >= 0 ? '+' : ''}$${portfolio.total_pnl.toFixed(2)} (${portfolio.total_pnl_pct.toFixed(2)}%)` : '$0.00 (0.00%)'}
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
 
-        {/* Crypto Prices Grid */}
-        <Paper sx={{ p: 2, mb: 4 }}>
-          <Typography variant="h6" gutterBottom>
-            💰 Live Cryptocurrency Prices
-          </Typography>
+        <Card sx={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
+              Available Cash
+            </Typography>
+            <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
+              {portfolio ? `$${portfolio.cash.toLocaleString()}` : '$0'}
+            </Typography>
+            <Typography variant="body2">
+              Ready for investment
+            </Typography>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white' }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
+              Diversification Score
+            </Typography>
+            <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
+              {portfolio ? `${portfolio.diversification_score.toFixed(0)}/100` : '0/100'}
+            </Typography>
+            <Typography variant="body2">
+              {portfolio ? `${portfolio.position_count} active positions` : 'No positions'}
+            </Typography>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', color: 'white' }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
+              Market Status
+            </Typography>
+            <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
+              LIVE
+            </Typography>
+            <Typography variant="body2">
+              {Object.keys(cryptoPrices).length} assets tracked
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
+
+      {/* Market Overview */}
+      <Card sx={{ mb: 4 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              Market Overview
+            </Typography>
+            <Button
+              startIcon={<Refresh />}
+              onClick={fetchData}
+              disabled={loading}
+              variant="outlined"
+              size="small"
+            >
+              Refresh
+            </Button>
+          </Box>
           <Box sx={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
             gap: 2 
           }}>
             {Object.entries(cryptoPrices).map(([symbol, data]) => (
-              <Card variant="outlined" key={symbol}>
-                <CardContent>
-                  <Typography variant="h6" color="primary">
+              <Card key={symbol} variant="outlined" sx={{ p: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                     {symbol}
                   </Typography>
-                  <Typography variant="h5">
-                    ${data.price.toLocaleString()}
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ color: getChangeColor(data.change_24h) }}
-                  >
-                    {data.change_24h >= 0 ? '+' : ''}{data.change_24h.toFixed(2)}%
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {data.name}
-                  </Typography>
-                </CardContent>
+                  <Chip 
+                    label={`${data.change_24h >= 0 ? '+' : ''}${data.change_24h.toFixed(2)}%`}
+                    size="small"
+                    sx={{ 
+                      backgroundColor: getChangeColor(data.change_24h),
+                      color: 'white',
+                      fontWeight: 'bold'
+                    }}
+                  />
+                </Box>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                  ${data.price.toLocaleString()}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {data.name}
+                </Typography>
               </Card>
             ))}
           </Box>
-        </Paper>
+        </CardContent>
+      </Card>
 
-        {/* Portfolio Overview */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 3, mb: 4 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                💼 Portfolio Value
-              </Typography>
-              {portfolio ? (
-                <>
-                  <Typography variant="h4" color="primary">
-                    ${portfolio.total_value.toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" color={portfolio.total_pnl >= 0 ? 'success.main' : 'error.main'}>
-                    P&L: ${portfolio.total_pnl.toFixed(2)} ({portfolio.total_pnl_pct.toFixed(2)}%)
-                  </Typography>
-                </>
-              ) : (
-                <CircularProgress size={24} />
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                💵 Available Cash
-              </Typography>
-              {portfolio ? (
-                <Typography variant="h4" color="primary">
-                  ${portfolio.cash.toLocaleString()}
-                </Typography>
-              ) : (
-                <CircularProgress size={24} />
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                📊 Diversification
-              </Typography>
-              {portfolio ? (
-                <>
-                  <Typography variant="h4" color="primary">
-                    {portfolio.diversification_score.toFixed(1)}/100
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {portfolio.position_count} positions
-                  </Typography>
-                </>
-              ) : (
-                <CircularProgress size={24} />
-              )}
-            </CardContent>
-          </Card>
-        </Box>
-
-        {/* Current Positions */}
-        {portfolio && portfolio.positions.length > 0 && (
-          <Paper sx={{ p: 2, mb: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              📈 Current Positions
+      {/* Recent News */}
+      {news.length > 0 && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
+              Market News
             </Typography>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Symbol</TableCell>
-                    <TableCell align="right">Quantity</TableCell>
-                    <TableCell align="right">Avg Price</TableCell>
-                    <TableCell align="right">Current Price</TableCell>
-                    <TableCell align="right">Market Value</TableCell>
-                    <TableCell align="right">P&L</TableCell>
-                    <TableCell align="right">P&L %</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {portfolio.positions.map((position, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Chip label={position.symbol} variant="outlined" />
-                      </TableCell>
-                      <TableCell align="right">{position.quantity.toFixed(6)}</TableCell>
-                      <TableCell align="right">${position.avg_price.toLocaleString()}</TableCell>
-                      <TableCell align="right">${position.current_price.toLocaleString()}</TableCell>
-                      <TableCell align="right">${position.market_value.toLocaleString()}</TableCell>
-                      <TableCell 
-                        align="right" 
-                        sx={{ color: position.pnl >= 0 ? 'success.main' : 'error.main' }}
-                      >
-                        ${position.pnl.toFixed(2)}
-                      </TableCell>
-                      <TableCell 
-                        align="right"
-                        sx={{ color: position.pnl_pct >= 0 ? 'success.main' : 'error.main' }}
-                      >
-                        {position.pnl_pct.toFixed(2)}%
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-        )}
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+              gap: 2 
+            }}>
+              {news.slice(0, 4).map((article, index) => (
+                <Card key={index} variant="outlined">
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 'bold', flex: 1 }}>
+                        {article.title}
+                      </Typography>
+                      <Box sx={{ 
+                        width: 8, 
+                        height: 8, 
+                        borderRadius: '50%', 
+                        backgroundColor: getSentimentColor(article.sentiment),
+                        ml: 1,
+                        mt: 0.5
+                      }} />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      {article.description}
+                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {article.relevant_cryptos.slice(0, 3).map((crypto, i) => (
+                          <Chip key={i} label={crypto} size="small" variant="outlined" />
+                        ))}
+                      </Box>
+                      <Typography variant="caption" color="text.secondary">
+                        {article.source}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+    </Box>
+  );
 
-        {/* Trading and Rebalancing */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 3, mb: 4 }}>
-          {/* Manual Trading */}
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              ⚡ Manual Trading
+  const renderTrading = () => (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>
+        Trading Center
+      </Typography>
+      
+      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+        {/* Manual Trading */}
+        <Card>
+          <CardContent>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
+              Execute Trade
             </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <FormControl size="small">
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <FormControl fullWidth>
                 <InputLabel>Cryptocurrency</InputLabel>
                 <Select
                   value={selectedCrypto}
@@ -372,19 +416,22 @@ function App() {
                   ))}
                 </Select>
               </FormControl>
+              
               <TextField
                 label="Quantity"
                 value={tradeQuantity}
                 onChange={(e) => setTradeQuantity(e.target.value)}
                 type="number"
-                size="small"
+                fullWidth
               />
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                 <Button
                   variant={tradeSide === 'buy' ? 'contained' : 'outlined'}
                   color="success"
                   onClick={() => setTradeSide('buy')}
-                  size="small"
+                  startIcon={<Add />}
+                  fullWidth
                 >
                   BUY
                 </Button>
@@ -392,41 +439,51 @@ function App() {
                   variant={tradeSide === 'sell' ? 'contained' : 'outlined'}
                   color="error"
                   onClick={() => setTradeSide('sell')}
-                  size="small"
+                  startIcon={<Remove />}
+                  fullWidth
                 >
                   SELL
                 </Button>
               </Box>
+              
               <Button
                 variant="contained"
                 onClick={executeTrade}
                 disabled={loading}
+                size="large"
                 fullWidth
               >
-                Execute Trade
+                {loading ? <CircularProgress size={24} /> : 'Execute Trade'}
               </Button>
             </Box>
-          </Paper>
+          </CardContent>
+        </Card>
 
-          {/* Rebalancing Suggestions */}
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              🔄 Rebalancing Suggestions
+        {/* Rebalancing */}
+        <Card>
+          <CardContent>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
+              Smart Rebalancing
             </Typography>
             {rebalanceSuggestions.length > 0 ? (
-              <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {rebalanceSuggestions.slice(0, 5).map((suggestion, index) => (
-                  <Box key={index} sx={{ mb: 2, p: 1, border: '1px solid #ddd', borderRadius: 1 }}>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
-                      <Chip 
-                        label={suggestion.action.toUpperCase()} 
-                        color={suggestion.action === 'buy' ? 'success' : 'error'}
-                        size="small"
-                      /> {suggestion.quantity.toFixed(4)} {suggestion.symbol}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                      {suggestion.reason}
-                    </Typography>
+                  <Box key={index} sx={{ 
+                    p: 2, 
+                    border: '1px solid #e0e0e0', 
+                    borderRadius: 1,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                        {suggestion.action.toUpperCase()} {suggestion.quantity.toFixed(4)} {suggestion.symbol}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {suggestion.reason}
+                      </Typography>
+                    </Box>
                     <Button
                       size="small"
                       variant="outlined"
@@ -440,84 +497,186 @@ function App() {
               </Box>
             ) : (
               <Typography variant="body2" color="text.secondary">
-                Portfolio is well balanced
+                Portfolio is optimally balanced
               </Typography>
             )}
-          </Paper>
-        </Box>
+          </CardContent>
+        </Card>
+      </Box>
+    </Box>
+  );
 
-        {/* System Controls */}
-        <Paper sx={{ p: 2, mb: 4 }}>
-          <Typography variant="h6" gutterBottom>
-            🔧 System Controls
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <Button
-              variant="outlined"
-              onClick={fetchData}
-              disabled={loading}
-            >
-              Refresh Data
-            </Button>
-            <Button
-              variant="outlined"
-              color="warning"
-              onClick={resetPortfolio}
-              disabled={loading}
-            >
-              Reset Portfolio
-            </Button>
-          </Box>
-        </Paper>
-
-        {/* Multi-Crypto News */}
-        {news.length > 0 && (
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              📰 Multi-Crypto News Feed
+  const renderPortfolio = () => (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>
+        Portfolio Management
+      </Typography>
+      
+      {portfolio && portfolio.positions.length > 0 && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
+              Current Positions
             </Typography>
-            <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
-              gap: 2 
-            }}>
-              {news.map((article, index) => (
-                <Card variant="outlined" key={index}>
-                  <CardContent>
-                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold', flex: 1 }}>
-                        {article.title}
-                      </Typography>
-                      <Chip 
-                        label={article.sentiment} 
-                        size="small" 
-                        color={getSentimentColor(article.sentiment) as any}
-                      />
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {article.description}
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
-                      {article.relevant_cryptos.map((crypto, i) => (
-                        <Chip key={i} label={crypto} size="small" variant="outlined" />
-                      ))}
-                    </Box>
-                    <Typography variant="caption" color="text.secondary">
-                      {article.source} • {new Date(article.published_at).toLocaleDateString()}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              ))}
-            </Box>
-          </Paper>
-        )}
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 'bold' }}>Asset</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 'bold' }}>Quantity</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 'bold' }}>Avg Price</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 'bold' }}>Current Price</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 'bold' }}>Market Value</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 'bold' }}>P&L</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 'bold' }}>P&L %</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {portfolio.positions.map((position, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <Chip label={position.symbol} variant="filled" />
+                      </TableCell>
+                      <TableCell align="right">{position.quantity.toFixed(6)}</TableCell>
+                      <TableCell align="right">${position.avg_price.toLocaleString()}</TableCell>
+                      <TableCell align="right">${position.current_price.toLocaleString()}</TableCell>
+                      <TableCell align="right">${position.market_value.toLocaleString()}</TableCell>
+                      <TableCell 
+                        align="right" 
+                        sx={{ color: position.pnl >= 0 ? '#4caf50' : '#f44336', fontWeight: 'bold' }}
+                      >
+                        ${position.pnl.toFixed(2)}
+                      </TableCell>
+                      <TableCell 
+                        align="right"
+                        sx={{ color: position.pnl_pct >= 0 ? '#4caf50' : '#f44336', fontWeight: 'bold' }}
+                      >
+                        {position.pnl_pct.toFixed(2)}%
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
+      )}
+    </Box>
+  );
 
-        {loading && (
-          <Box display="flex" justifyContent="center" mt={2}>
-            <CircularProgress />
-          </Box>
-        )}
-      </Container>
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'trading': return renderTrading();
+      case 'portfolio': return renderPortfolio();
+      case 'analytics': return <Box sx={{ p: 3 }}><Typography>Analytics coming soon...</Typography></Box>;
+      case 'settings': return (
+        <Box sx={{ p: 3 }}>
+          <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>Settings</Typography>
+          <Button variant="outlined" color="warning" onClick={resetPortfolio} disabled={loading}>
+            Reset Portfolio
+          </Button>
+        </Box>
+      );
+      default: return renderDashboard();
+    }
+  };
+
+  return (
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f8fafc' }}>
+      {/* Sidebar */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: 260,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: 260,
+            boxSizing: 'border-box',
+            bgcolor: '#1e293b',
+            color: 'white',
+            borderRight: 'none'
+          },
+        }}
+      >
+        <Box sx={{ p: 3 }}>
+          <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white' }}>
+            Crypto Trading
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#94a3b8' }}>
+            Professional Platform
+          </Typography>
+        </Box>
+        <Divider sx={{ bgcolor: '#334155' }} />
+        <List sx={{ px: 2, py: 1 }}>
+          {menuItems.map((item) => (
+            <ListItem
+              button
+              key={item.view}
+              onClick={() => setCurrentView(item.view)}
+              sx={{
+                borderRadius: 2,
+                mb: 0.5,
+                bgcolor: currentView === item.view ? '#3b82f6' : 'transparent',
+                '&:hover': {
+                  bgcolor: currentView === item.view ? '#3b82f6' : '#334155',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: 'inherit', minWidth: 36 }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItem>
+          ))}
+        </List>
+      </Drawer>
+
+      {/* Main Content */}
+      <Box component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        {/* Top Bar */}
+        <AppBar 
+          position="static" 
+          elevation={0}
+          sx={{ 
+            bgcolor: 'white', 
+            borderBottom: '1px solid #e2e8f0',
+            color: '#1e293b'
+          }}
+        >
+          <Toolbar>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', textTransform: 'capitalize' }}>
+                {currentView}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Chip 
+                label="LIVE" 
+                color="success" 
+                size="small"
+                sx={{ fontWeight: 'bold' }}
+              />
+              <Avatar sx={{ width: 32, height: 32, bgcolor: '#3b82f6' }}>
+                U
+              </Avatar>
+            </Box>
+          </Toolbar>
+        </AppBar>
+
+        {/* Content Area */}
+        <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ m: 3, mb: 0 }} 
+              onClose={() => setError(null)}
+            >
+              {error}
+            </Alert>
+          )}
+          {renderCurrentView()}
+        </Box>
+      </Box>
     </Box>
   );
 }
