@@ -23,7 +23,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Grid,
 } from '@mui/material';
 import axios from 'axios';
 
@@ -217,31 +216,33 @@ function App() {
           <Typography variant="h6" gutterBottom>
             💰 Live Cryptocurrency Prices
           </Typography>
-          <Grid container spacing={2}>
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+            gap: 2 
+          }}>
             {Object.entries(cryptoPrices).map(([symbol, data]) => (
-              <Grid item xs={12} sm={6} md={3} key={symbol}>
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="h6" color="primary">
-                      {symbol}
-                    </Typography>
-                    <Typography variant="h5">
-                      ${data.price.toLocaleString()}
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ color: getChangeColor(data.change_24h) }}
-                    >
-                      {data.change_24h >= 0 ? '+' : ''}{data.change_24h.toFixed(2)}%
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {data.name}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+              <Card variant="outlined" key={symbol}>
+                <CardContent>
+                  <Typography variant="h6" color="primary">
+                    {symbol}
+                  </Typography>
+                  <Typography variant="h5">
+                    ${data.price.toLocaleString()}
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ color: getChangeColor(data.change_24h) }}
+                  >
+                    {data.change_24h >= 0 ? '+' : ''}{data.change_24h.toFixed(2)}%
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {data.name}
+                  </Typography>
+                </CardContent>
+              </Card>
             ))}
-          </Grid>
+          </Box>
         </Paper>
 
         {/* Portfolio Overview */}
@@ -475,37 +476,39 @@ function App() {
             <Typography variant="h6" gutterBottom>
               📰 Multi-Crypto News Feed
             </Typography>
-            <Grid container spacing={2}>
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+              gap: 2 
+            }}>
               {news.map((article, index) => (
-                <Grid item xs={12} md={6} key={index}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', flex: 1 }}>
-                          {article.title}
-                        </Typography>
-                        <Chip 
-                          label={article.sentiment} 
-                          size="small" 
-                          color={getSentimentColor(article.sentiment) as any}
-                        />
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        {article.description}
+                <Card variant="outlined" key={index}>
+                  <CardContent>
+                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold', flex: 1 }}>
+                        {article.title}
                       </Typography>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
-                        {article.relevant_cryptos.map((crypto, i) => (
-                          <Chip key={i} label={crypto} size="small" variant="outlined" />
-                        ))}
-                      </Box>
-                      <Typography variant="caption" color="text.secondary">
-                        {article.source} • {new Date(article.published_at).toLocaleDateString()}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
+                      <Chip 
+                        label={article.sentiment} 
+                        size="small" 
+                        color={getSentimentColor(article.sentiment) as any}
+                      />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      {article.description}
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
+                      {article.relevant_cryptos.map((crypto, i) => (
+                        <Chip key={i} label={crypto} size="small" variant="outlined" />
+                      ))}
+                    </Box>
+                    <Typography variant="caption" color="text.secondary">
+                      {article.source} • {new Date(article.published_at).toLocaleDateString()}
+                    </Typography>
+                  </CardContent>
+                </Card>
               ))}
-            </Grid>
+            </Box>
           </Paper>
         )}
 
