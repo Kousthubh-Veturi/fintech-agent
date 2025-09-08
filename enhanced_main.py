@@ -10,6 +10,7 @@ from typing import List, Optional
 from multi_crypto_data import MultiCryptoDataFetcher
 from multi_crypto_trader import MultiCryptoTrader
 from simple_agent import SimpleBTCAgent
+from auth import auth_router
 
 # Load environment variables
 load_dotenv('python/.env')
@@ -51,6 +52,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include authentication routes
+app.include_router(auth_router)
 
 @app.get("/")
 async def root():

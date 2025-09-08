@@ -31,6 +31,7 @@ import {
   ListItemText,
   Divider,
   Avatar,
+  Menu,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -44,8 +45,12 @@ import {
   Remove,
   ArrowUpward,
   ArrowDownward,
+  Logout,
+  Security,
 } from '@mui/icons-material';
 import axios from 'axios';
+import { AuthProvider, useAuth } from './components/AuthContext';
+import { AuthPage } from './components/AuthPage';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -98,7 +103,8 @@ interface RebalanceSuggestion {
   reason: string;
 }
 
-function App() {
+function TradingApp() {
+  const { user, logout, isAuthenticated } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentView, setCurrentView] = useState('dashboard');
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
@@ -110,8 +116,13 @@ function App() {
   const [tradeQuantity, setTradeQuantity] = useState('0.01');
   const [tradeSide, setTradeSide] = useState<'buy' | 'sell'>('buy');
   const [selectedCrypto, setSelectedCrypto] = useState('BTC');
+  const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   
   const supportedCryptos = ['BTC', 'ETH', 'SOL', 'ADA', 'DOT', 'LINK', 'MATIC', 'AVAX'];
+
+  if (!isAuthenticated) {
+    return <AuthPage />;
+  }
 
   const fetchData = async () => {
     try {
@@ -656,9 +667,43 @@ function App() {
                 size="small"
                 sx={{ fontWeight: 'bold' }}
               />
-              <Avatar sx={{ width: 32, height: 32, bgcolor: '#3b82f6' }}>
-                U
-              </Avatar>
+              <IconButton
+                onClick={(e) => setUserMenuAnchor(e.currentTarget)}
+                sx={{ p: 0 }}
+              >
+                <Avatar sx={{ width: 32, height: 32, bgcolor: '#3b82f6' }}>
+                  {user?.username?.charAt(0).toUpperCase() || 'U'}
+                </Avatar>
+              </IconButton>
+              <Menu
+                anchorEl={userMenuAnchor}
+                open={Boolean(userMenuAnchor)}
+                onClose={() => setUserMenuAnchor(null)}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              >
+                <Box sx={{ px: 2, py: 1 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                    {user?.full_name || user?.username}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {user?.email}
+                  </Typography>
+                </Box>
+                <Divider />
+                <ListItem button onClick={() => setCurrentView('settings')}>
+                  <ListItemIcon>
+                    <Security fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="Security & 2FA" />
+                </ListItem>
+                <ListItem button onClick={logout}>
+                  <ListItemIcon>
+                    <Logout fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="Sign Out" />
+                </ListItem>
+              </Menu>
             </Box>
           </Toolbar>
         </AppBar>
@@ -678,6 +723,14 @@ function App() {
         </Box>
       </Box>
     </Box>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <TradingApp />
+    </AuthProvider>
   );
 }
 
