@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Paper,
@@ -24,6 +24,7 @@ export const DeleteAccountForm: React.FC<DeleteAccountFormProps> = ({ token, onB
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [confirmed, setConfirmed] = useState(false);
 
   const handleDeleteAccount = async () => {

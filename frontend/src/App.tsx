@@ -44,7 +44,6 @@ import {
   ArrowUpward,
   ArrowDownward,
   Logout,
-  Security,
 } from '@mui/icons-material';
 import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useSearchParams } from 'react-router-dom';
@@ -106,9 +105,11 @@ interface RebalanceSuggestion {
   reason: string;
 }
 
+type ViewType = 'dashboard' | 'portfolio' | 'trading' | 'news' | 'analytics' | 'settings';
+
 function TradingApp() {
   const { user, logout, isAuthenticated } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'portfolio' | 'trading' | 'news' | 'analytics' | 'settings'>('dashboard');
+  const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [cryptoPrices, setCryptoPrices] = useState<Record<string, CryptoPrice>>({});
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -191,6 +192,7 @@ function TradingApp() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const resetPortfolio = async () => {
     try {
       setLoading(true);
@@ -227,7 +229,7 @@ function TradingApp() {
     return change >= 0 ? '#4caf50' : '#f44336';
   };
 
-  const menuItems = [
+  const menuItems: Array<{text: string, icon: React.ReactNode, view: ViewType}> = [
     { text: 'Dashboard', icon: <Dashboard />, view: 'dashboard' },
     { text: 'Trading', icon: <TrendingUp />, view: 'trading' },
     { text: 'Portfolio', icon: <AccountBalance />, view: 'portfolio' },
