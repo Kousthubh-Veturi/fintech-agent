@@ -41,12 +41,17 @@ export const EmailVerificationForm: React.FC<EmailVerificationFormProps> = ({ to
     setLoading(true);
     setError(null);
 
+    console.log('Verifying email with token:', verificationToken);
+
     try {
-      await axios.post(`${process.env.REACT_APP_API_URL || 'https://fintech-agent-production.up.railway.app'}/auth/verify-email`, {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL || 'https://fintech-agent-production.up.railway.app'}/auth/verify-email`, {
         token: verificationToken,
       });
+      console.log('Verify email response:', response.data);
       setSuccess(true);
     } catch (err: any) {
+      console.error('Verify email error:', err);
+      console.error('Error response:', err.response?.data);
       setError(err.response?.data?.detail || 'Failed to verify email.');
     } finally {
       setLoading(false);
@@ -55,16 +60,32 @@ export const EmailVerificationForm: React.FC<EmailVerificationFormProps> = ({ to
 
   const handleResendVerification = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !email.trim()) {
+      setError('Please enter your email address.');
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
     setResendLoading(true);
     setError(null);
     setResendSuccess(false);
 
+    console.log('Sending resend verification request for email:', email);
+
     try {
-      await axios.post(`${process.env.REACT_APP_API_URL || 'https://fintech-agent-production.up.railway.app'}/auth/resend-verification`, {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL || 'https://fintech-agent-production.up.railway.app'}/auth/resend-verification`, {
         email: email,
       });
+      console.log('Resend verification response:', response.data);
       setResendSuccess(true);
     } catch (err: any) {
+      console.error('Resend verification error:', err);
+      console.error('Error response:', err.response?.data);
       setError(err.response?.data?.detail || 'Failed to resend verification email.');
     } finally {
       setResendLoading(false);

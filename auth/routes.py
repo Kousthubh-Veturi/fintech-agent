@@ -294,8 +294,9 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
     )
 
 @router.post("/verify-email")
-async def verify_email(token: str, db: Session = Depends(get_db)):
+async def verify_email(request_data: dict, db: Session = Depends(get_db)):
     """Verify email address"""
+    token = request_data.get("token")
     user = db.query(User).filter(
         User.verification_token == token,
         User.verification_token_expires > datetime.utcnow()
@@ -315,8 +316,9 @@ async def verify_email(token: str, db: Session = Depends(get_db)):
     return {"message": "Email verified successfully"}
 
 @router.post("/resend-verification")
-async def resend_verification_email(email: str, db: Session = Depends(get_db)):
+async def resend_verification_email(request_data: PasswordResetRequest, db: Session = Depends(get_db)):
     """Resend verification email"""
+    email = request_data.email
     user = db.query(User).filter(User.email == email).first()
     
     if not user:
