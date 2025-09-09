@@ -10,3 +10,4 @@ python/priv-pubkey.txt
 .env
 *.env
 env.example
+env.leq
