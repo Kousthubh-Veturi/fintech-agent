@@ -1,14 +1,70 @@
-node_modules
-npm-debug.log
+# Git
 .git
 .gitignore
-README.md
-.env
-.nyc_output
-coverage
-.DS_Store
-python/venv
-python/.env
+
+# Python
 __pycache__
 *.pyc
-.pytest_cache
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+python/venv/
+*.egg-info/
+.pytest_cache/
+.coverage
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+!README.md
+
+# Development files
+.env*
+!.env.example
+env.example
+env.railway
+
+# Node modules (if any)
+node_modules/
+npm-debug.log*
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite3
+
+# Build artifacts
+dist/
+build/
+*.tar.gz
+
+# Docker
+Dockerfile.dev
+docker-compose.dev.yml
+docker-compose.override.yml
+
+# Deployment scripts (keep essential ones)
+deploy-*.sh
+!start.sh
+
+# Test files
+test/
+tests/
+*_test.py
+test_*.py

@@ -49,7 +49,7 @@ git push -u origin main
 4. **Select**: "Deploy from GitHub repo"
 5. **Choose**: Your fintech-agent repository
 6. **Railway will**:
-   - Detect `Dockerfile.railway`
+   - Detect `Dockerfile`
    - Start building automatically
    - Assign a URL like `https://fintech-agent-production.railway.app`
 
@@ -211,7 +211,7 @@ git push origin main
 # Common fixes:
 - Verify environment variables are set
 - Check DATABASE_URL is provided by Railway
-- Ensure Dockerfile.railway is being used
+- Ensure Dockerfile is properly configured
 ```
 
 **2. Frontend Can't Connect to Backend**

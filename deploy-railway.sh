@@ -46,11 +46,11 @@ fi
 # Test Railway-compatible build locally
 print_status "Testing Railway Docker build..."
 if command -v docker &> /dev/null; then
-    if docker build -f Dockerfile.railway -t fintech-agent-railway . > /dev/null 2>&1; then
+    if docker build -t fintech-agent-railway . > /dev/null 2>&1; then
         print_success "Docker build successful!"
         docker rmi fintech-agent-railway > /dev/null 2>&1
     else
-        print_error "Docker build failed. Check Dockerfile.railway"
+        print_error "Docker build failed. Check Dockerfile and requirements.txt"
         exit 1
     fi
 else

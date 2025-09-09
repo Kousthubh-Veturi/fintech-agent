@@ -15,11 +15,17 @@ import qrcode
 from io import BytesIO
 import base64
 
-# Ensure environment variables are loaded
+# Ensure environment variables are loaded (Railway compatible)
 load_dotenv('python/.env')
+load_dotenv('.env')  # Also try root .env
+load_dotenv()  # Also try default locations
 
-# Database configuration
-DATABASE_URL = os.getenv('DATABASE_URL') or os.getenv('NEON_DATABASE_URL', 'postgresql://user:password@localhost/fintech_agent')
+# Database configuration (Railway provides DATABASE_URL directly)
+DATABASE_URL = (
+    os.getenv('DATABASE_URL') or 
+    os.getenv('NEON_DATABASE_URL') or 
+    'postgresql://user:password@localhost/fintech_agent'
+)
 SECRET_KEY = os.getenv('SECRET_KEY', secrets.token_urlsafe(32))
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30

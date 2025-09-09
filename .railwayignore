@@ -1,0 +1,40 @@
+# Railway ignore file - ensures clean deployment
+
+# Old deployment files (deleted)
+Dockerfile.railway
+requirements.railway.txt
+railway.json
+
+# Development files
+.env.example
+env.example
+env.railway
+
+# Node modules and frontend build artifacts
+frontend/node_modules/
+frontend/build/
+frontend/.env.local
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Git and IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Documentation
+*.md
+!README.md
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
