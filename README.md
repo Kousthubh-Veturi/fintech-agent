@@ -2,6 +2,19 @@
 
 Advanced cryptocurrency trading system with complete user authentication, portfolio management, and AI recommendations.
 
+## 🌐 **LIVE DEPLOYMENT**
+
+✨ **Try the live app now!**
+- 🎯 **Frontend**: [https://fingrowth.vercel.app/](https://fingrowth.vercel.app/)
+- 🔧 **Backend API**: [https://fintech-agent-production.up.railway.app/](https://fintech-agent-production.up.railway.app/)
+
+**Full-stack application with:**
+- React frontend deployed on Vercel
+- FastAPI backend deployed on Railway  
+- PostgreSQL database on Neon
+- Complete authentication system
+- Live cryptocurrency trading simulation
+
 ## 🔐 Authentication Features
 
 - **User Registration & Login** with email verification
@@ -23,26 +36,44 @@ Advanced cryptocurrency trading system with complete user authentication, portfo
 - **Risk Management**: Position limits and exposure controls
 - **Modern UI**: React dashboard with Material-UI components
 
+## 🏗️ **Deployment Architecture**
+
+```
+User Browser
+    ↓
+🌐 Vercel Frontend (React)
+https://fingrowth.vercel.app/
+    ↓ API Calls
+🚂 Railway Backend (FastAPI) 
+https://fintech-agent-production.up.railway.app/
+    ↓
+🗄️ Neon Database (PostgreSQL)
+```
+
 ## 🚀 Quick Start
 
-### One-Command Deployment
+### 🌟 **Use Live Version (Recommended)**
+Visit [**https://fingrowth.vercel.app/**](https://fingrowth.vercel.app/) - No setup required!
+
+### 🏠 **Local Development**
 
 ```bash
-# Interactive deployment script
-./quick-start.sh
+# Backend
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python enhanced_main.py
+
+# Frontend  
+cd frontend
+npm install
+npm start
 ```
 
-### Production Deployment (Recommended)
-
-```bash
-# Full Docker deployment with authentication
-./deploy.production.sh
-```
-
-**Access your application:**
-- Frontend: http://localhost
+**Access your local application:**
+- Frontend: http://localhost:3000
 - Backend API: http://localhost:8000
-- Complete authentication system ready!
 
 ### Development Setup
 
@@ -209,6 +240,52 @@ docker-compose -f docker-compose.prod.yml logs -f
 docker-compose -f docker-compose.prod.yml logs -f backend
 docker-compose -f docker-compose.prod.yml logs -f frontend
 ```
+
+## 🚀 **Production Deployment**
+
+### **Current Live Deployment**
+- ✅ **Frontend**: [https://fingrowth.vercel.app/](https://fingrowth.vercel.app/) (Vercel)
+- ✅ **Backend**: [https://fintech-agent-production.up.railway.app/](https://fintech-agent-production.up.railway.app/) (Railway)
+- ✅ **Database**: Neon PostgreSQL (Cloud)
+
+### **Deploy Your Own**
+
+#### **Frontend to Vercel**
+```bash
+# Deploy frontend
+./deploy-vercel.sh
+```
+Or manually:
+1. Fork this repository
+2. Connect to Vercel
+3. Set root directory to `frontend`
+4. Add environment variable: `REACT_APP_API_URL=your-backend-url`
+
+#### **Backend to Railway**
+```bash
+# Deploy backend
+./deploy-railway.sh
+```
+Or manually:
+1. Connect repository to Railway
+2. Add PostgreSQL database service
+3. Set environment variables:
+   - `SECRET_KEY`
+   - `SENDGRID_API_KEY` 
+   - `FROM_EMAIL`
+
+### **Tech Stack**
+- **Frontend**: React + TypeScript + Material-UI
+- **Backend**: FastAPI + SQLAlchemy + PostgreSQL
+- **Authentication**: JWT + bcrypt + 2FA
+- **Deployment**: Vercel + Railway + Neon
+- **Email**: SendGrid
+- **Data**: CoinGecko API
+
+## 📚 **Documentation**
+- [Railway Deployment Guide](RAILWAY_DEPLOYMENT.md)
+- [Vercel Deployment Guide](VERCEL_DEPLOYMENT.md)
+- [Authentication Setup](auth/README.md)
 
 ## License
 
