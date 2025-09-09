@@ -51,6 +51,7 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, useSearchParams } 
 import { AuthProvider, useAuth } from './components/AuthContext';
 import { AuthPage } from './components/AuthPage';
 import { ResetPasswordForm } from './components/ResetPasswordForm';
+import { EmailVerificationForm } from './components/EmailVerificationForm';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://fintech-agent-production.up.railway.app';
 
@@ -792,12 +793,49 @@ const ResetPasswordPage: React.FC = () => {
   );
 };
 
+// Email Verification Page Component
+const EmailVerificationPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const token = searchParams.get('token');
+
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 4,
+      }}
+    >
+      <Container maxWidth="sm">
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '80vh',
+          }}
+        >
+          <EmailVerificationForm 
+            token={token || undefined} 
+            onBackToLogin={() => navigate('/')} 
+          />
+        </Box>
+      </Container>
+    </Box>
+  );
+};
+
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/*" element={<TradingApp />} />
         </Routes>
       </Router>

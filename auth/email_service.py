@@ -21,7 +21,7 @@ class EmailService:
         logger.info(f"   SENDGRID_API_KEY: {'Set' if self.api_key else 'Not set'}")
         logger.info(f"   SendGrid client: {'Initialized' if self.sg else 'Not initialized'}")
         
-    def send_password_reset(self, to_email: str, reset_token: str, frontend_url: str = "http://localhost:3000") -> bool:
+    def send_password_reset(self, to_email: str, reset_token: str, frontend_url: str = "https://fingrowth.vercel.app") -> bool:
         """Send password reset email"""
         if not self.sg:
             logger.warning("SendGrid not configured, password reset email not sent")
@@ -70,7 +70,7 @@ class EmailService:
             logger.error(f"Failed to send password reset email: {e}")
             return False
     
-    def send_verification_email(self, to_email: str, verification_token: str, frontend_url: str = "http://localhost:3000") -> bool:
+    def send_verification_email(self, to_email: str, verification_token: str, frontend_url: str = "https://fingrowth.vercel.app") -> bool:
         """Send email verification"""
         if not self.sg:
             logger.warning("SendGrid not configured, verification email not sent")

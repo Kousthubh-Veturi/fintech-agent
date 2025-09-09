@@ -79,7 +79,22 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={clearError}>
+        <Alert 
+          severity="error" 
+          sx={{ mb: 3 }} 
+          onClose={clearError}
+          action={
+            error.includes('verify your email') ? (
+              <Button 
+                color="inherit" 
+                size="small"
+                onClick={() => window.open('/verify-email', '_blank')}
+              >
+                Verify Email
+              </Button>
+            ) : null
+          }
+        >
           {error}
         </Alert>
       )}

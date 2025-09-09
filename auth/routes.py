@@ -208,6 +208,14 @@ async def login(user_data: UserLogin, request: Request, db: Session = Depends(ge
             detail="Account is disabled"
         )
     
+    # Check email verification - REQUIRED!
+    if not user.is_verified:
+        log_login_attempt(db, user_data.email, ip_address, False, user_agent)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Please verify your email address before logging in. Check your inbox for the verification link."
+        )
+    
     # Check 2FA if enabled
     if user.is_2fa_enabled:
         if not user_data.totp_code:
@@ -305,6 +313,35 @@ async def verify_email(token: str, db: Session = Depends(get_db)):
     db.commit()
     
     return {"message": "Email verified successfully"}
+
+@router.post("/resend-verification")
+async def resend_verification_email(email: str, db: Session = Depends(get_db)):
+    """Resend verification email"""
+    user = db.query(User).filter(User.email == email).first()
+    
+    if not user:
+        # Don't reveal if email exists
+        return {"message": "If the email exists and is unverified, a new verification email has been sent"}
+    
+    if user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email is already verified"
+        )
+    
+    # Generate new verification token
+    verification_token = generate_verification_token()
+    user.verification_token = verification_token
+    user.verification_token_expires = datetime.utcnow() + timedelta(hours=24)
+    db.commit()
+    
+    # Send verification email
+    try:
+        email_service.send_verification_email(user.email, verification_token)
+    except Exception as e:
+        logger.warning(f"Failed to send verification email: {e}")
+    
+    return {"message": "If the email exists and is unverified, a new verification email has been sent"}
 
 @router.post("/forgot-password")
 async def forgot_password(request_data: PasswordResetRequest, db: Session = Depends(get_db)):
