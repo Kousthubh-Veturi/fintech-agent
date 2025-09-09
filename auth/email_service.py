@@ -172,6 +172,58 @@ class EmailService:
         except Exception as e:
             logger.error(f"Failed to send backup codes email: {e}")
             return False
+    
+    def send_account_deletion_email(self, to_email: str, deletion_token: str, frontend_url: str = "https://fingrowth.vercel.app") -> bool:
+        """Send account deletion confirmation email"""
+        if not self.sg:
+            logger.warning("SendGrid not configured, deletion email not sent")
+            return False
+        
+        # For testing, log the deletion token
+        logger.info(f"🗑️ Account deletion token for {to_email}: {deletion_token}")
+        
+        deletion_url = f"{frontend_url}/delete-account?token={deletion_token}"
+        
+        html_content = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 30px; text-align: center;">
+                <h1 style="color: white; margin: 0;">⚠️ Account Deletion Request</h1>
+            </div>
+            <div style="padding: 30px; background: #f8fafc;">
+                <h2 style="color: #1e293b;">Confirm Account Deletion</h2>
+                <p style="color: #64748b; line-height: 1.6;">
+                    You have requested to delete your Fintech Agent account. This action is <strong>permanent</strong> and cannot be undone.
+                </p>
+                <p style="color: #64748b; line-height: 1.6;">
+                    All your data, including portfolio history and settings, will be permanently removed.
+                </p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{deletion_url}" 
+                       style="background: #ef4444; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                        🗑️ Confirm Account Deletion
+                    </a>
+                </div>
+                <p style="color: #64748b; font-size: 14px; margin-top: 30px;">
+                    If you did not request this deletion, please ignore this email and your account will remain active.
+                    This link expires in 1 hour.
+                </p>
+            </div>
+        </div>
+        """
+        
+        message = Mail(
+            from_email=self.from_email,
+            to_emails=to_email,
+            subject="⚠️ Confirm Account Deletion - Fintech Agent",
+            html_content=html_content
+        )
+        
+        try:
+            response = self.sg.send(message)
+            return response.status_code == 202
+        except Exception as e:
+            logger.error(f"Failed to send account deletion email: {e}")
+            return False
 
 # Global email service instance
 email_service = EmailService()

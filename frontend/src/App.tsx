@@ -52,6 +52,8 @@ import { AuthProvider, useAuth } from './components/AuthContext';
 import { AuthPage } from './components/AuthPage';
 import { ResetPasswordForm } from './components/ResetPasswordForm';
 import { EmailVerificationForm } from './components/EmailVerificationForm';
+import { SettingsPage } from './components/SettingsPage';
+import { DeleteAccountForm } from './components/DeleteAccountForm';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://fintech-agent-production.up.railway.app';
 
@@ -106,7 +108,7 @@ interface RebalanceSuggestion {
 
 function TradingApp() {
   const { user, logout, isAuthenticated } = useAuth();
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'portfolio' | 'trading' | 'news' | 'analytics' | 'settings'>('dashboard');
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [cryptoPrices, setCryptoPrices] = useState<Record<string, CryptoPrice>>({});
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -242,7 +244,7 @@ function TradingApp() {
         gap: 3, 
         mb: 4 
       }}>
-        <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+        <Card sx={{ background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)', color: 'white' }}>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
               Total Portfolio Value
@@ -259,7 +261,7 @@ function TradingApp() {
           </CardContent>
         </Card>
 
-        <Card sx={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
+        <Card sx={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: 'white' }}>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
               Available Cash
@@ -273,7 +275,7 @@ function TradingApp() {
           </CardContent>
         </Card>
 
-        <Card sx={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white' }}>
+        <Card sx={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)', color: 'white' }}>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
               Diversification Score
@@ -287,7 +289,7 @@ function TradingApp() {
           </CardContent>
         </Card>
 
-        <Card sx={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', color: 'white' }}>
+        <Card sx={{ background: 'linear-gradient(135deg, #ea580c 0%, #f97316 100%)', color: 'white' }}>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
               Market Status
@@ -583,12 +585,7 @@ function TradingApp() {
       case 'portfolio': return renderPortfolio();
       case 'analytics': return <Box sx={{ p: 3 }}><Typography>Analytics coming soon...</Typography></Box>;
       case 'settings': return (
-        <Box sx={{ p: 3 }}>
-          <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>Settings</Typography>
-          <Button variant="outlined" color="warning" onClick={resetPortfolio} disabled={loading}>
-            Reset Portfolio
-          </Button>
-        </Box>
+        <SettingsPage onBack={() => setCurrentView('dashboard')} />
       );
       default: return renderDashboard();
     }
@@ -605,19 +602,31 @@ function TradingApp() {
           '& .MuiDrawer-paper': {
             width: 260,
             boxSizing: 'border-box',
-            bgcolor: '#1e293b',
+            background: 'linear-gradient(180deg, #1e293b 0%, #334155 100%)',
             color: 'white',
             borderRight: 'none'
           },
         }}
       >
-        <Box sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white' }}>
-            Crypto Trading
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#94a3b8' }}>
-            Professional Platform
-          </Typography>
+        <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box
+            component="img"
+            src="/logo.png"
+            alt="Fintech Agent Logo"
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: '8px',
+            }}
+          />
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white' }}>
+              Fintech Agent
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#94a3b8' }}>
+              Professional Platform
+            </Typography>
+          </Box>
         </Box>
         <Divider sx={{ bgcolor: '#334155' }} />
         <List sx={{ px: 2, py: 1 }}>
@@ -692,11 +701,11 @@ function TradingApp() {
                   </Typography>
                 </Box>
                 <Divider />
-                <ListItemButton onClick={() => setCurrentView('settings')}>
+                <ListItemButton onClick={() => { setCurrentView('settings'); setUserMenuAnchor(null); }}>
                   <ListItemIcon>
-                    <Security fontSize="small" />
+                    <Settings fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText primary="Security & 2FA" />
+                  <ListItemText primary="Settings" />
                 </ListItemButton>
                 <ListItemButton onClick={logout}>
                   <ListItemIcon>
@@ -738,7 +747,7 @@ const ResetPasswordPage: React.FC = () => {
       <Box
         sx={{
           minHeight: '100vh',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+          background: 'linear-gradient(135deg, #1e40af 0%, #7c3aed 50%, #3b82f6 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -829,6 +838,72 @@ const EmailVerificationPage: React.FC = () => {
   );
 };
 
+// Delete Account Confirmation Page Component
+const DeleteAccountPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const token = searchParams.get('token');
+
+  if (!token) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #1e40af 0%, #7c3aed 50%, #3b82f6 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          py: 4,
+        }}
+      >
+        <Container maxWidth="sm">
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              minHeight: '80vh',
+            }}
+          >
+            <Alert severity="error">
+              Invalid deletion link. Please request a new account deletion from settings.
+            </Alert>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 4,
+      }}
+    >
+      <Container maxWidth="sm">
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '80vh',
+          }}
+        >
+          <DeleteAccountForm 
+            token={token} 
+            onBackToLogin={() => navigate('/')} 
+          />
+        </Box>
+      </Container>
+    </Box>
+  );
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -836,6 +911,7 @@ function App() {
         <Routes>
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/verify-email" element={<EmailVerificationPage />} />
+          <Route path="/delete-account" element={<DeleteAccountPage />} />
           <Route path="/*" element={<TradingApp />} />
         </Routes>
       </Router>

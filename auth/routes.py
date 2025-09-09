@@ -343,6 +343,68 @@ async def resend_verification_email(email: str, db: Session = Depends(get_db)):
     
     return {"message": "If the email exists and is unverified, a new verification email has been sent"}
 
+@router.post("/request-account-deletion")
+async def request_account_deletion(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Request account deletion with email verification"""
+    if current_user.is_verified:
+        # Generate deletion token
+        deletion_token = generate_verification_token()
+        current_user.reset_token = deletion_token  # Reuse reset_token field for deletion
+        current_user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+        db.commit()
+        
+        # Send deletion confirmation email
+        try:
+            email_service.send_account_deletion_email(current_user.email, deletion_token)
+        except Exception as e:
+            logger.warning(f"Failed to send account deletion email: {e}")
+        
+        return {"message": "Account deletion confirmation email sent. Check your inbox."}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please verify your email first"
+        )
+
+@router.post("/delete-account-with-password")
+async def delete_account_with_password(
+    password: str, 
+    current_user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    """Delete account with password verification"""
+    if not verify_password(password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect password"
+        )
+    
+    # Delete user account
+    db.delete(current_user)
+    db.commit()
+    
+    return {"message": "Account deleted successfully"}
+
+@router.post("/delete-account-with-token")
+async def delete_account_with_token(token: str, db: Session = Depends(get_db)):
+    """Delete account with email token verification"""
+    user = db.query(User).filter(
+        User.reset_token == token,
+        User.reset_token_expires > datetime.utcnow()
+    ).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired deletion token"
+        )
+    
+    # Delete user account
+    db.delete(user)
+    db.commit()
+    
+    return {"message": "Account deleted successfully"}
+
 @router.post("/forgot-password")
 async def forgot_password(request_data: PasswordResetRequest, db: Session = Depends(get_db)):
     """Request password reset"""
