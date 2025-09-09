@@ -7,13 +7,17 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from typing import List, Optional
 
+# Load environment variables FIRST
+load_dotenv('python/.env')
+
 from multi_crypto_data import MultiCryptoDataFetcher
 from multi_crypto_trader import MultiCryptoTrader
 from simple_agent import SimpleBTCAgent
 from auth import auth_router
 
-# Load environment variables
-load_dotenv('python/.env')
+# Debug: Print environment loading
+print(f"Environment loaded: DATABASE_URL={'Set' if os.getenv('DATABASE_URL') else 'Not set'}")
+print(f"Environment loaded: SECRET_KEY={'Set' if os.getenv('SECRET_KEY') else 'Not set'}")
 
 # Global instances
 trader = None
@@ -55,6 +59,17 @@ app.add_middleware(
 
 # Include authentication routes
 app.include_router(auth_router)
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Docker and monitoring"""
+    return {
+        "status": "healthy",
+        "service": "fintech-agent-backend",
+        "version": "2.0.0",
+        "timestamp": asyncio.get_event_loop().time()
+    }
 
 @app.get("/")
 async def root():
@@ -325,4 +340,9 @@ async def get_system_status():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import os
+    
+    # Railway provides PORT environment variable
+    port = int(os.environ.get("PORT", 8000))
+    
+    uvicorn.run(app, host="0.0.0.0", port=port)

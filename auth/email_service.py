@@ -15,6 +15,12 @@ class EmailService:
         self.from_email = os.getenv('FROM_EMAIL', 'noreply@fintechagent.com')
         self.sg = SendGridAPIClient(api_key=self.api_key) if self.api_key else None
         
+        # Debug logging
+        logger.info(f"📧 EmailService initialized:")
+        logger.info(f"   FROM_EMAIL: {self.from_email}")
+        logger.info(f"   SENDGRID_API_KEY: {'Set' if self.api_key else 'Not set'}")
+        logger.info(f"   SendGrid client: {'Initialized' if self.sg else 'Not initialized'}")
+        
     def send_password_reset(self, to_email: str, reset_token: str, frontend_url: str = "http://localhost:3000") -> bool:
         """Send password reset email"""
         if not self.sg:
@@ -69,7 +75,11 @@ class EmailService:
         if not self.sg:
             logger.warning("SendGrid not configured, verification email not sent")
             return False
-            
+        
+        # For testing, just log the verification token
+        logger.info(f"📧 Email verification token for {to_email}: {verification_token}")
+        logger.info(f"📧 Verification URL: {frontend_url}/verify-email?token={verification_token}")
+        
         verify_url = f"{frontend_url}/verify-email?token={verification_token}"
         
         html_content = f"""
@@ -107,10 +117,18 @@ class EmailService:
         )
         
         try:
+            logger.info(f"📧 Attempting to send verification email:")
+            logger.info(f"   FROM: {self.from_email}")
+            logger.info(f"   TO: {to_email}")
+            logger.info(f"   SUBJECT: Verify Your Email - Fintech Agent")
+            
             response = self.sg.send(message)
+            logger.info(f"📧 SendGrid response: {response.status_code}")
             return response.status_code == 202
         except Exception as e:
-            logger.error(f"Failed to send verification email: {e}")
+            logger.error(f"❌ Failed to send verification email: {e}")
+            logger.error(f"   This is likely because {self.from_email} is not verified in SendGrid")
+            logger.error(f"   Solution: Verify your sender identity in SendGrid dashboard")
             return False
 
     def send_2fa_backup_codes(self, to_email: str, backup_codes: list) -> bool:

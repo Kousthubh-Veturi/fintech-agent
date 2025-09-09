@@ -8,6 +8,12 @@ from datetime import datetime, timedelta
 import json
 from typing import Optional
 import re
+import traceback
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 from .database import (
     get_db, User, LoginAttempt, Session as UserSession,
@@ -93,58 +99,83 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 @router.post("/register", response_model=UserResponse)
 async def register(user_data: UserCreate, request: Request, db: Session = Depends(get_db)):
     """Register a new user"""
-    # Validate input
-    if not is_valid_email(user_data.email):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid email format"
+    try:
+        logger.info(f"Registration attempt for email: {user_data.email}")
+        
+        # Validate input
+        if not is_valid_email(user_data.email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid email format"
+            )
+        
+        if not is_strong_password(user_data.password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
+            )
+        
+        # Check if user already exists (with retry for database connection issues)
+        try:
+            existing_user = db.query(User).filter(
+                (User.email == user_data.email) | (User.username == user_data.username)
+            ).first()
+        except Exception as db_error:
+            logger.error(f"Database connection error during user lookup: {db_error}")
+            # Try to refresh the connection
+            db.close()
+            db = next(get_db())
+            existing_user = db.query(User).filter(
+                (User.email == user_data.email) | (User.username == user_data.username)
+            ).first()
+        
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email or username already registered"
+            )
+        
+        # Create user
+        verification_token = generate_verification_token()
+        hashed_password = get_password_hash(user_data.password)
+        
+        user = User(
+            email=user_data.email,
+            username=user_data.username,
+            hashed_password=hashed_password,
+            full_name=user_data.full_name,
+            verification_token=verification_token,
+            verification_token_expires=datetime.utcnow() + timedelta(hours=24)
         )
-    
-    if not is_strong_password(user_data.password):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
+        
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        
+        # Send verification email (don't fail registration if email fails)
+        try:
+            email_service.send_verification_email(user.email, verification_token)
+        except Exception as e:
+            logger.warning(f"Failed to send verification email: {e}")
+        
+        logger.info(f"User registered successfully: {user.email}")
+        return UserResponse(
+            id=user.id,
+            email=user.email,
+            username=user.username,
+            full_name=user.full_name,
+            is_verified=user.is_verified,
+            is_2fa_enabled=user.is_2fa_enabled
         )
-    
-    # Check if user already exists
-    existing_user = db.query(User).filter(
-        (User.email == user_data.email) | (User.username == user_data.username)
-    ).first()
-    
-    if existing_user:
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Registration error: {e}")
+        logger.error(traceback.format_exc())
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email or username already registered"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: {str(e)}"
         )
-    
-    # Create user
-    verification_token = generate_verification_token()
-    hashed_password = get_password_hash(user_data.password)
-    
-    user = User(
-        email=user_data.email,
-        username=user_data.username,
-        hashed_password=hashed_password,
-        full_name=user_data.full_name,
-        verification_token=verification_token,
-        verification_token_expires=datetime.utcnow() + timedelta(hours=24)
-    )
-    
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    
-    # Send verification email
-    email_service.send_verification_email(user.email, verification_token)
-    
-    return UserResponse(
-        id=user.id,
-        email=user.email,
-        username=user.username,
-        full_name=user.full_name,
-        is_verified=user.is_verified,
-        is_2fa_enabled=user.is_2fa_enabled
-    )
 
 @router.post("/login", response_model=Token)
 async def login(user_data: UserLogin, request: Request, db: Session = Depends(get_db)):

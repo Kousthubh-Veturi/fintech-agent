@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Container,
-  Paper,
   Typography,
   AppBar,
   Toolbar,
@@ -26,15 +24,15 @@ import {
   IconButton,
   Drawer,
   List,
-  ListItem,
   ListItemIcon,
   ListItemText,
   Divider,
   Avatar,
   Menu,
+  ListItemButton,
+  Container,
 } from '@mui/material';
 import {
-  Menu as MenuIcon,
   Dashboard,
   TrendingUp,
   AccountBalance,
@@ -49,8 +47,10 @@ import {
   Security,
 } from '@mui/icons-material';
 import axios from 'axios';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import { AuthPage } from './components/AuthPage';
+import { ResetPasswordForm } from './components/ResetPasswordForm';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -105,7 +105,6 @@ interface RebalanceSuggestion {
 
 function TradingApp() {
   const { user, logout, isAuthenticated } = useAuth();
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentView, setCurrentView] = useState('dashboard');
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [cryptoPrices, setCryptoPrices] = useState<Record<string, CryptoPrice>>({});
@@ -119,10 +118,6 @@ function TradingApp() {
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   
   const supportedCryptos = ['BTC', 'ETH', 'SOL', 'ADA', 'DOT', 'LINK', 'MATIC', 'AVAX'];
-
-  if (!isAuthenticated) {
-    return <AuthPage />;
-  }
 
   const fetchData = async () => {
     try {
@@ -206,10 +201,16 @@ function TradingApp() {
   };
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (isAuthenticated) {
+      fetchData();
+      const interval = setInterval(fetchData, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return <AuthPage />;
+  }
 
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
@@ -620,8 +621,7 @@ function TradingApp() {
         <Divider sx={{ bgcolor: '#334155' }} />
         <List sx={{ px: 2, py: 1 }}>
           {menuItems.map((item) => (
-            <ListItem
-              button
+            <ListItemButton
               key={item.view}
               onClick={() => setCurrentView(item.view)}
               sx={{
@@ -637,7 +637,7 @@ function TradingApp() {
                 {item.icon}
               </ListItemIcon>
               <ListItemText primary={item.text} />
-            </ListItem>
+            </ListItemButton>
           ))}
         </List>
       </Drawer>
@@ -691,18 +691,18 @@ function TradingApp() {
                   </Typography>
                 </Box>
                 <Divider />
-                <ListItem button onClick={() => setCurrentView('settings')}>
+                <ListItemButton onClick={() => setCurrentView('settings')}>
                   <ListItemIcon>
                     <Security fontSize="small" />
                   </ListItemIcon>
                   <ListItemText primary="Security & 2FA" />
-                </ListItem>
-                <ListItem button onClick={logout}>
+                </ListItemButton>
+                <ListItemButton onClick={logout}>
                   <ListItemIcon>
                     <Logout fontSize="small" />
                   </ListItemIcon>
                   <ListItemText primary="Sign Out" />
-                </ListItem>
+                </ListItemButton>
               </Menu>
             </Box>
           </Toolbar>
@@ -726,10 +726,81 @@ function TradingApp() {
   );
 }
 
+// Reset Password Page Component
+const ResetPasswordPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const token = searchParams.get('token');
+
+  if (!token) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          py: 4,
+        }}
+      >
+        <Container maxWidth="sm">
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              minHeight: '80vh',
+            }}
+          >
+            <Alert severity="error">
+              Invalid reset link. Please request a new password reset.
+            </Alert>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 4,
+      }}
+    >
+      <Container maxWidth="sm">
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '80vh',
+          }}
+        >
+          <ResetPasswordForm 
+            token={token} 
+            onBackToLogin={() => navigate('/')} 
+          />
+        </Box>
+      </Container>
+    </Box>
+  );
+};
+
 function App() {
   return (
     <AuthProvider>
-      <TradingApp />
+      <Router>
+        <Routes>
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/*" element={<TradingApp />} />
+        </Routes>
+      </Router>
     </AuthProvider>
   );
 }

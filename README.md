@@ -1,8 +1,18 @@
-# Multi-Crypto Trading System
+# 🚀 Fintech Agent - Complete Trading & Authentication System
 
-Advanced cryptocurrency trading system with multi-asset support, portfolio management, and AI recommendations.
+Advanced cryptocurrency trading system with complete user authentication, portfolio management, and AI recommendations.
 
-## Features
+## 🔐 Authentication Features
+
+- **User Registration & Login** with email verification
+- **Password Reset** via email with secure tokens
+- **2FA Support** with TOTP and backup codes
+- **JWT Authentication** with secure session management
+- **OAuth Ready** (Google, GitHub integration)
+- **Password Security** with bcrypt hashing (64-bit encryption)
+- **Email Service** integrated with SendGrid
+
+## 📊 Trading Features
 
 - **8 Cryptocurrencies**: BTC, ETH, SOL, ADA, DOT, LINK, MATIC, AVAX
 - **Live Price Data**: Real-time prices with 24h changes from CoinGecko
@@ -13,9 +23,45 @@ Advanced cryptocurrency trading system with multi-asset support, portfolio manag
 - **Risk Management**: Position limits and exposure controls
 - **Modern UI**: React dashboard with Material-UI components
 
-## Quick Start
+## 🚀 Quick Start
 
-### Local Development
+### One-Command Deployment
+
+```bash
+# Interactive deployment script
+./quick-start.sh
+```
+
+### Production Deployment (Recommended)
+
+```bash
+# Full Docker deployment with authentication
+./deploy.production.sh
+```
+
+**Access your application:**
+- Frontend: http://localhost
+- Backend API: http://localhost:8000
+- Complete authentication system ready!
+
+### Development Setup
+
+```bash
+# Development environment with hot-reload
+./deploy.dev.sh
+```
+
+**Then start services:**
+```bash
+# Terminal 1 - Backend
+source python/venv/bin/activate
+python enhanced_main.py
+
+# Terminal 2 - Frontend  
+cd frontend && npm start
+```
+
+### Manual Setup
 
 1. **Clone and setup**:
 ```bash

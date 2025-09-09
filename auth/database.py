@@ -2,6 +2,7 @@
 Database configuration and models for authentication system
 """
 import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -14,15 +15,31 @@ import qrcode
 from io import BytesIO
 import base64
 
+# Ensure environment variables are loaded
+load_dotenv('python/.env')
+
 # Database configuration
-DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://user:password@localhost/fintech_agent')
+DATABASE_URL = os.getenv('DATABASE_URL') or os.getenv('NEON_DATABASE_URL', 'postgresql://user:password@localhost/fintech_agent')
 SECRET_KEY = os.getenv('SECRET_KEY', secrets.token_urlsafe(32))
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Create engine and session
-engine = create_engine(DATABASE_URL)
+print(f"🔗 Auth database URL: {DATABASE_URL[:50]}...")
+
+# Create engine and session with connection pooling for Neon
+engine = create_engine(
+    DATABASE_URL,
+    pool_size=5,
+    max_overflow=10,
+    pool_pre_ping=True,  # Validates connections before use
+    pool_recycle=300,    # Recycle connections every 5 minutes
+    connect_args={
+        "connect_timeout": 10,
+        "application_name": "fintech-agent-auth"
+    }
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 Base = declarative_base()
 
 # Password hashing
@@ -83,8 +100,10 @@ class Session(Base):
     user_agent = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
 
-# Create all tables
-Base.metadata.create_all(bind=engine)
+# Create all tables (only when explicitly called)
+def create_tables():
+    """Create all database tables"""
+    Base.metadata.create_all(bind=engine)
 
 # Database dependency
 def get_db():
