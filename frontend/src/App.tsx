@@ -52,7 +52,7 @@ import { AuthProvider, useAuth } from './components/AuthContext';
 import { AuthPage } from './components/AuthPage';
 import { ResetPasswordForm } from './components/ResetPasswordForm';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = process.env.REACT_APP_API_URL || 'https://fintech-agent-production.up.railway.app';
 
 interface CryptoPrice {
   symbol: string;

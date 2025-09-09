@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const checkAuth = async () => {
       if (token) {
         try {
-          const response = await axios.get('http://localhost:8000/auth/me');
+          const response = await axios.get(`${process.env.REACT_APP_API_URL || 'https://fintech-agent-production.up.railway.app'}/auth/me`);
           setUser(response.data);
         } catch (error) {
           localStorage.removeItem('token');
@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const response = await axios.post('http://localhost:8000/auth/login', {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL || 'https://fintech-agent-production.up.railway.app'}/auth/login`, {
         email,
         password,
         totp_code: totpCode
@@ -107,7 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const response = await axios.post('http://localhost:8000/auth/register', {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL || 'https://fintech-agent-production.up.railway.app'}/auth/register`, {
         email,
         username,
         password,
@@ -129,7 +129,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async () => {
     try {
       if (token) {
-        await axios.post('http://localhost:8000/auth/logout');
+        await axios.post(`${process.env.REACT_APP_API_URL || 'https://fintech-agent-production.up.railway.app'}/auth/logout`);
       }
     } catch (error) {
       // Continue with logout even if API call fails

@@ -70,7 +70,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
     setLoading(true);
 
     try {
-      await axios.post('http://localhost:8000/auth/reset-password', {
+      await axios.post(`${process.env.REACT_APP_API_URL || 'https://fintech-agent-production.up.railway.app'}/auth/reset-password`, {
         token,
         new_password: newPassword
       });

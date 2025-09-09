@@ -35,7 +35,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
     setError(null);
 
     try {
-      await axios.post('http://localhost:8000/auth/forgot-password', { email });
+      await axios.post(`${process.env.REACT_APP_API_URL || 'https://fintech-agent-production.up.railway.app'}/auth/forgot-password`, { email });
       setSuccess(true);
     } catch (error: any) {
       setError(error.response?.data?.detail || 'Failed to send reset email');
