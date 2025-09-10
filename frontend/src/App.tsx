@@ -238,7 +238,7 @@ function TradingApp() {
   ];
 
   const renderDashboard = () => (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, bgcolor: '#0f172a', minHeight: '100vh' }}>
       {/* Key Metrics Cards */}
       <Box sx={{ 
         display: 'grid', 
@@ -246,29 +246,29 @@ function TradingApp() {
         gap: 3, 
         mb: 4 
       }}>
-        <Card sx={{ background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)', color: 'white' }}>
+        <Card sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: 'white', border: '1px solid #10b981' }}>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
               Total Portfolio Value
             </Typography>
-            <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
+            <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1, color: '#10b981' }}>
               {portfolio ? `$${portfolio.total_value.toLocaleString()}` : '$0'}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {portfolio && portfolio.total_pnl >= 0 ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />}
-              <Typography variant="body2">
+              {portfolio && portfolio.total_pnl >= 0 ? <ArrowUpward fontSize="small" sx={{ color: '#10b981' }} /> : <ArrowDownward fontSize="small" sx={{ color: '#ef4444' }} />}
+              <Typography variant="body2" sx={{ color: portfolio && portfolio.total_pnl >= 0 ? '#10b981' : '#ef4444' }}>
                 {portfolio ? `${portfolio.total_pnl >= 0 ? '+' : ''}$${portfolio.total_pnl.toFixed(2)} (${portfolio.total_pnl_pct.toFixed(2)}%)` : '$0.00 (0.00%)'}
               </Typography>
             </Box>
           </CardContent>
         </Card>
 
-        <Card sx={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: 'white' }}>
+        <Card sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: 'white', border: '1px solid #3b82f6' }}>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
               Available Cash
             </Typography>
-            <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
+            <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1, color: '#3b82f6' }}>
               {portfolio ? `$${portfolio.cash.toLocaleString()}` : '$0'}
             </Typography>
             <Typography variant="body2">
@@ -277,12 +277,12 @@ function TradingApp() {
           </CardContent>
         </Card>
 
-        <Card sx={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)', color: 'white' }}>
+        <Card sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: 'white', border: '1px solid #8b5cf6' }}>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
               Diversification Score
             </Typography>
-            <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
+            <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1, color: '#8b5cf6' }}>
               {portfolio ? `${portfolio.diversification_score.toFixed(0)}/100` : '0/100'}
             </Typography>
             <Typography variant="body2">
@@ -291,12 +291,12 @@ function TradingApp() {
           </CardContent>
         </Card>
 
-        <Card sx={{ background: 'linear-gradient(135deg, #ea580c 0%, #f97316 100%)', color: 'white' }}>
+        <Card sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: 'white', border: '1px solid #f59e0b' }}>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
               Market Status
             </Typography>
-            <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
+            <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1, color: '#f59e0b' }}>
               LIVE
             </Typography>
             <Typography variant="body2">
@@ -307,10 +307,10 @@ function TradingApp() {
       </Box>
 
       {/* Market Overview */}
-      <Card sx={{ mb: 4 }}>
+      <Card sx={{ mb: 4, bgcolor: '#1e293b', border: '1px solid #374151' }}>
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#10b981' }}>
               Market Overview
             </Typography>
             <Button
@@ -594,7 +594,7 @@ function TradingApp() {
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f8fafc' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#0f172a' }}>
       {/* Sidebar */}
       <Drawer
         variant="permanent"
@@ -604,7 +604,7 @@ function TradingApp() {
           '& .MuiDrawer-paper': {
             width: 260,
             boxSizing: 'border-box',
-            background: 'linear-gradient(180deg, #1e293b 0%, #334155 100%)',
+            background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',
             color: 'white',
             borderRight: 'none'
           },
@@ -630,7 +630,7 @@ function TradingApp() {
             </Typography>
           </Box>
         </Box>
-        <Divider sx={{ bgcolor: '#334155' }} />
+        <Divider sx={{ bgcolor: '#10b981' }} />
         <List sx={{ px: 2, py: 1 }}>
           {menuItems.map((item) => (
             <ListItemButton
@@ -639,9 +639,9 @@ function TradingApp() {
               sx={{
                 borderRadius: 2,
                 mb: 0.5,
-                bgcolor: currentView === item.view ? '#3b82f6' : 'transparent',
+                bgcolor: currentView === item.view ? '#10b981' : 'transparent',
                 '&:hover': {
-                  bgcolor: currentView === item.view ? '#3b82f6' : '#334155',
+                  bgcolor: currentView === item.view ? '#10b981' : '#1e293b',
                 },
               }}
             >
@@ -683,7 +683,7 @@ function TradingApp() {
                 onClick={(e) => setUserMenuAnchor(e.currentTarget)}
                 sx={{ p: 0 }}
               >
-                <Avatar sx={{ width: 32, height: 32, bgcolor: '#3b82f6' }}>
+                <Avatar sx={{ width: 32, height: 32, bgcolor: '#10b981' }}>
                   {user?.username?.charAt(0).toUpperCase() || 'U'}
                 </Avatar>
               </IconButton>
@@ -749,7 +749,7 @@ const ResetPasswordPage: React.FC = () => {
       <Box
         sx={{
           minHeight: '100vh',
-          background: 'linear-gradient(135deg, #1e40af 0%, #7c3aed 50%, #3b82f6 100%)',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #10b981 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -778,7 +778,7 @@ const ResetPasswordPage: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #374151 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -814,7 +814,7 @@ const EmailVerificationPage: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #374151 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -851,7 +851,7 @@ const DeleteAccountPage: React.FC = () => {
       <Box
         sx={{
           minHeight: '100vh',
-          background: 'linear-gradient(135deg, #1e40af 0%, #7c3aed 50%, #3b82f6 100%)',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #10b981 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -880,7 +880,7 @@ const DeleteAccountPage: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #374151 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
