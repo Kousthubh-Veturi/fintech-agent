@@ -427,7 +427,12 @@ function TradingApp() {
                     sx={{ 
                       backgroundColor: getChangeColor(data.change_24h),
                       color: 'white',
-                      fontWeight: 'bold'
+                      fontWeight: 'bold',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                      '&:hover': {
+                        transform: 'scale(1.05)',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                      }
                     }}
                   />
                 </Box>
@@ -866,13 +871,41 @@ function TradingApp() {
                 label="LIVE" 
                 color="success" 
                 size="small"
-                sx={{ fontWeight: 'bold' }}
+                sx={{ 
+                  fontWeight: 'bold',
+                  animation: 'pulse 2s infinite',
+                  '@keyframes pulse': {
+                    '0%': {
+                      boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.7)',
+                    },
+                    '70%': {
+                      boxShadow: '0 0 0 10px rgba(16, 185, 129, 0)',
+                    },
+                    '100%': {
+                      boxShadow: '0 0 0 0 rgba(16, 185, 129, 0)',
+                    },
+                  }
+                }}
               />
               <IconButton
                 onClick={(e) => setUserMenuAnchor(e.currentTarget)}
-                sx={{ p: 0 }}
+                sx={{ 
+                  p: 0,
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    transform: 'scale(1.1)',
+                  }
+                }}
               >
-                <Avatar sx={{ width: 32, height: 32, bgcolor: '#06b6d4' }}>
+                <Avatar sx={{ 
+                  width: 32, 
+                  height: 32, 
+                  bgcolor: '#06b6d4',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    boxShadow: '0 0 20px rgba(6, 182, 212, 0.5)',
+                  }
+                }}>
                   {user?.username?.charAt(0).toUpperCase() || 'U'}
                 </Avatar>
               </IconButton>
