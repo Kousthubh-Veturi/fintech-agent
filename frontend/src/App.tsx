@@ -247,7 +247,7 @@ function TradingApp() {
         mb: 4 
       }}>
         <Card sx={{ 
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f1419 100%)', 
           color: 'white', 
           border: '1px solid #06b6d4',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -274,7 +274,7 @@ function TradingApp() {
         </Card>
 
         <Card sx={{ 
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f1419 100%)', 
           color: 'white', 
           border: '1px solid #0891b2',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -298,7 +298,7 @@ function TradingApp() {
         </Card>
 
         <Card sx={{ 
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f1419 100%)', 
           color: 'white', 
           border: '1px solid #0284c7',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -322,7 +322,7 @@ function TradingApp() {
         </Card>
 
         <Card sx={{ 
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f1419 100%)', 
           color: 'white', 
           border: '1px solid #06b6d4',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -644,9 +644,9 @@ function TradingApp() {
           '& .MuiDrawer-paper': {
             width: 260,
             boxSizing: 'border-box',
-            background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',
+            background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f1419 100%)',
             color: 'white',
-            borderRight: 'none'
+            borderRight: '1px solid rgba(6, 182, 212, 0.1)'
           },
         }}
       >
@@ -701,7 +701,7 @@ function TradingApp() {
           position="static" 
           elevation={0}
           sx={{ 
-            background: 'linear-gradient(90deg, #1e293b 0%, #334155 100%)', 
+            background: 'linear-gradient(90deg, #0f172a 0%, #1e293b 50%, #334155 100%)', 
             borderBottom: '1px solid #06b6d4',
             color: 'white'
           }}
