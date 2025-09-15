@@ -31,6 +31,7 @@ import {
   Menu,
   ListItemButton,
   Container,
+  Skeleton,
 } from '@mui/material';
 import {
   Dashboard,
@@ -262,7 +263,16 @@ function TradingApp() {
               Total Portfolio Value
             </Typography>
             <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1, color: '#06b6d4' }}>
-              {portfolio ? `$${portfolio.total_value.toLocaleString()}` : '$0'}
+              {loading && !portfolio ? (
+                <Skeleton 
+                  variant="text" 
+                  width="60%" 
+                  height={48}
+                  sx={{ bgcolor: 'rgba(6, 182, 212, 0.1)' }}
+                />
+              ) : (
+                `$${portfolio?.total_value.toLocaleString() || '0'}`
+              )}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {portfolio && portfolio.total_pnl >= 0 ? <ArrowUpward fontSize="small" sx={{ color: '#10b981' }} /> : <ArrowDownward fontSize="small" sx={{ color: '#ef4444' }} />}
@@ -379,7 +389,20 @@ function TradingApp() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
             gap: 2 
           }}>
-            {Object.entries(cryptoPrices).map(([symbol, data]) => (
+            {loading && Object.keys(cryptoPrices).length === 0 ? (
+              // Skeleton loading state
+              Array.from({ length: 8 }).map((_, index) => (
+                <Card key={`skeleton-${index}`} variant="outlined" sx={{ p: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Skeleton variant="text" width="40%" height={24} />
+                    <Skeleton variant="rectangular" width={60} height={24} sx={{ borderRadius: 1 }} />
+                  </Box>
+                  <Skeleton variant="text" width="70%" height={32} sx={{ mb: 0.5 }} />
+                  <Skeleton variant="text" width="50%" height={20} />
+                </Card>
+              ))
+            ) : (
+              Object.entries(cryptoPrices).map(([symbol, data]) => (
               <Card key={symbol} variant="outlined" sx={{ p: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
@@ -402,7 +425,8 @@ function TradingApp() {
                   {data.name}
                 </Typography>
               </Card>
-            ))}
+              ))
+            )}
           </Box>
         </CardContent>
       </Card>
