@@ -239,7 +239,17 @@ function TradingApp() {
   ];
 
   const renderDashboard = () => (
-    <Box sx={{ p: 3, bgcolor: '#0f172a', minHeight: '100vh' }}>
+    <Box sx={{ 
+      p: 3, 
+      bgcolor: '#0f172a', 
+      minHeight: '100vh',
+      background: `
+        #0f172a,
+        radial-gradient(circle at 20% 50%, rgba(6, 182, 212, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(8, 145, 178, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(2, 132, 199, 0.04) 0%, transparent 50%)
+      `,
+    }}>
       {/* Key Metrics Cards */}
       <Box sx={{ 
         display: 'grid', 
@@ -357,7 +367,17 @@ function TradingApp() {
       </Box>
 
       {/* Market Overview */}
-      <Card sx={{ mb: 4, bgcolor: '#1e293b', border: '1px solid #374151' }}>
+      <Card sx={{ 
+        mb: 4, 
+        bgcolor: 'rgba(30, 41, 59, 0.8)', 
+        border: '1px solid rgba(55, 65, 81, 0.3)',
+        backdropFilter: 'blur(10px)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': {
+          bgcolor: 'rgba(30, 41, 59, 0.9)',
+          border: '1px solid rgba(6, 182, 212, 0.3)',
+        }
+      }}>
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#06b6d4' }}>
@@ -451,7 +471,16 @@ function TradingApp() {
 
       {/* Recent News */}
       {news.length > 0 && (
-        <Card>
+        <Card sx={{
+          bgcolor: 'rgba(30, 41, 59, 0.8)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(6, 182, 212, 0.2)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover': {
+            bgcolor: 'rgba(30, 41, 59, 0.9)',
+            border: '1px solid rgba(6, 182, 212, 0.4)',
+          }
+        }}>
           <CardContent>
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
               Market News
@@ -641,7 +670,16 @@ function TradingApp() {
         </Card>
 
         {/* Rebalancing */}
-        <Card>
+        <Card sx={{
+          bgcolor: 'rgba(30, 41, 59, 0.8)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(6, 182, 212, 0.2)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover': {
+            bgcolor: 'rgba(30, 41, 59, 0.9)',
+            border: '1px solid rgba(6, 182, 212, 0.4)',
+          }
+        }}>
           <CardContent>
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
               Smart Rebalancing
