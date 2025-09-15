@@ -246,7 +246,17 @@ function TradingApp() {
         gap: 3, 
         mb: 4 
       }}>
-        <Card sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: 'white', border: '1px solid #06b6d4' }}>
+        <Card sx={{ 
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
+          color: 'white', 
+          border: '1px solid #06b6d4',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: '0 20px 40px rgba(6, 182, 212, 0.15)',
+            border: '1px solid #0891b2',
+          }
+        }}>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
               Total Portfolio Value
@@ -263,7 +273,17 @@ function TradingApp() {
           </CardContent>
         </Card>
 
-        <Card sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: 'white', border: '1px solid #0891b2' }}>
+        <Card sx={{ 
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
+          color: 'white', 
+          border: '1px solid #0891b2',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: '0 20px 40px rgba(8, 145, 178, 0.15)',
+            border: '1px solid #06b6d4',
+          }
+        }}>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
               Available Cash
@@ -277,7 +297,17 @@ function TradingApp() {
           </CardContent>
         </Card>
 
-        <Card sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: 'white', border: '1px solid #0284c7' }}>
+        <Card sx={{ 
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
+          color: 'white', 
+          border: '1px solid #0284c7',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: '0 20px 40px rgba(2, 132, 199, 0.15)',
+            border: '1px solid #0891b2',
+          }
+        }}>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
               Diversification Score
@@ -291,7 +321,17 @@ function TradingApp() {
           </CardContent>
         </Card>
 
-        <Card sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: 'white', border: '1px solid #06b6d4' }}>
+        <Card sx={{ 
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
+          color: 'white', 
+          border: '1px solid #06b6d4',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: '0 20px 40px rgba(6, 182, 212, 0.15)',
+            border: '1px solid #0891b2',
+          }
+        }}>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ opacity: 0.9 }}>
               Market Status
