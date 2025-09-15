@@ -359,6 +359,17 @@ function TradingApp() {
               disabled={loading}
               variant="outlined"
               size="small"
+              sx={{
+                borderColor: '#06b6d4',
+                color: '#06b6d4',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover': {
+                  borderColor: '#0891b2',
+                  backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 25px rgba(6, 182, 212, 0.25)',
+                }
+              }}
             >
               Refresh
             </Button>
@@ -489,6 +500,13 @@ function TradingApp() {
                   onClick={() => setTradeSide('buy')}
                   startIcon={<Add />}
                   fullWidth
+                  sx={{
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: tradeSide === 'buy' ? '0 8px 25px rgba(16, 185, 129, 0.4)' : '0 8px 25px rgba(16, 185, 129, 0.2)',
+                    }
+                  }}
                 >
                   BUY
                 </Button>
@@ -498,6 +516,13 @@ function TradingApp() {
                   onClick={() => setTradeSide('sell')}
                   startIcon={<Remove />}
                   fullWidth
+                  sx={{
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: tradeSide === 'sell' ? '0 8px 25px rgba(239, 68, 68, 0.4)' : '0 8px 25px rgba(239, 68, 68, 0.2)',
+                    }
+                  }}
                 >
                   SELL
                 </Button>
@@ -509,6 +534,18 @@ function TradingApp() {
                 disabled={loading}
                 size="large"
                 fullWidth
+                sx={{
+                  background: 'linear-gradient(45deg, #06b6d4 30%, #0891b2 90%)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #0891b2 30%, #0284c7 90%)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 12px 30px rgba(6, 182, 212, 0.4)',
+                  },
+                  '&:disabled': {
+                    background: 'rgba(148, 163, 184, 0.3)',
+                  }
+                }}
               >
                 {loading ? <CircularProgress size={24} /> : 'Execute Trade'}
               </Button>
