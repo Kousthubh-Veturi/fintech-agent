@@ -472,7 +472,23 @@ function TradingApp() {
               Execute Trade
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <FormControl fullWidth>
+              <FormControl fullWidth sx={{
+                '& .MuiOutlinedInput-root': {
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover fieldset': {
+                    borderColor: '#06b6d4',
+                    boxShadow: '0 0 0 1px rgba(6, 182, 212, 0.1)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#06b6d4',
+                    borderWidth: '2px',
+                    boxShadow: '0 0 0 3px rgba(6, 182, 212, 0.1)',
+                  },
+                },
+                '& .MuiInputLabel-root.Mui-focused': {
+                  color: '#06b6d4',
+                },
+              }}>
                 <InputLabel>Cryptocurrency</InputLabel>
                 <Select
                   value={selectedCrypto}
@@ -491,6 +507,23 @@ function TradingApp() {
                 onChange={(e) => setTradeQuantity(e.target.value)}
                 type="number"
                 fullWidth
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover fieldset': {
+                      borderColor: '#06b6d4',
+                      boxShadow: '0 0 0 1px rgba(6, 182, 212, 0.1)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#06b6d4',
+                      borderWidth: '2px',
+                      boxShadow: '0 0 0 3px rgba(6, 182, 212, 0.1)',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#06b6d4',
+                  },
+                }}
               />
               
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
