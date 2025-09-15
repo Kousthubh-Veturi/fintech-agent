@@ -403,7 +403,20 @@ function TradingApp() {
               ))
             ) : (
               Object.entries(cryptoPrices).map(([symbol, data]) => (
-              <Card key={symbol} variant="outlined" sx={{ p: 2 }}>
+              <Card 
+                key={symbol} 
+                variant="outlined" 
+                sx={{ 
+                  p: 2,
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    transform: 'translateY(-4px) scale(1.02)',
+                    boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)',
+                    borderColor: '#06b6d4',
+                  }
+                }}
+              >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                     {symbol}
@@ -444,7 +457,19 @@ function TradingApp() {
               gap: 2 
             }}>
               {news.slice(0, 4).map((article, index) => (
-                <Card key={index} variant="outlined">
+                <Card 
+                  key={index} 
+                  variant="outlined"
+                  sx={{
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.1)',
+                      borderColor: '#06b6d4',
+                    }
+                  }}
+                >
                   <CardContent>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                       <Typography variant="subtitle1" sx={{ fontWeight: 'bold', flex: 1 }}>
