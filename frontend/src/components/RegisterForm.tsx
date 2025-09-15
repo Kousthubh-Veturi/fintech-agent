@@ -130,6 +130,17 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         maxWidth: 400,
         width: '100%',
         background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+        animation: 'slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+        '@keyframes slideInUp': {
+          '0%': {
+            transform: 'translateY(30px)',
+            opacity: 0,
+          },
+          '100%': {
+            transform: 'translateY(0)',
+            opacity: 1,
+          },
+        },
       }}
     >
       <Box sx={{ textAlign: 'center', mb: 3 }}>

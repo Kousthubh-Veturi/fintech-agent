@@ -59,6 +59,15 @@ export const AuthPage: React.FC = () => {
                 borderRadius: '16px',
                 mb: 2,
                 boxShadow: '0 8px 32px rgba(6, 182, 212, 0.3)',
+                animation: 'logoFloat 3s ease-in-out infinite',
+                '@keyframes logoFloat': {
+                  '0%, 100%': {
+                    transform: 'translateY(0px)',
+                  },
+                  '50%': {
+                    transform: 'translateY(-10px)',
+                  },
+                },
               }}
             />
             <Typography
