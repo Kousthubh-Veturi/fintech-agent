@@ -716,13 +716,33 @@ function TradingApp() {
               sx={{
                 borderRadius: 2,
                 mb: 0.5,
+                position: 'relative',
+                overflow: 'hidden',
                 bgcolor: currentView === item.view ? '#06b6d4' : 'transparent',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: currentView === item.view ? 'translateX(8px)' : 'translateX(0)',
                 '&:hover': {
                   bgcolor: currentView === item.view ? '#06b6d4' : '#1e293b',
+                  transform: 'translateX(8px)',
+                },
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: currentView === item.view ? '4px' : '0px',
+                  backgroundColor: '#0891b2',
+                  transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 },
               }}
             >
-              <ListItemIcon sx={{ color: 'inherit', minWidth: 36 }}>
+              <ListItemIcon sx={{ 
+                color: 'inherit', 
+                minWidth: 36,
+                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: currentView === item.view ? 'scale(1.1)' : 'scale(1)',
+              }}>
                 {item.icon}
               </ListItemIcon>
               <ListItemText primary={item.text} />
